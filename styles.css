@@ -1,0 +1,889 @@
+/* ================================================
+   GLOBAL RESET
+=================================================== */
+:root {
+  color-scheme: dark;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #0a0a0a;
+  color: #eaeaea;
+  margin: 0;
+  padding: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: #00e5ff;
+  text-decoration: none;
+}
+
+.sub {
+  opacity: 0.75;
+}
+
+/* Utility */
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ================================================
+   TOPBAR / HEADER
+=================================================== */
+.topbar {
+  width: 100%;
+  padding: 20px 38px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 20;
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-flexblock {
+  width: 160px;
+  height: auto;
+  filter: drop-shadow(0 0 18px #00e5ff55);
+  transition: 0.3s ease;
+}
+
+.logo-flexblock:hover {
+  filter: drop-shadow(0 0 24px #00e5ff99);
+  transform: translateY(-2px);
+}
+
+/* ================================================
+   CHAIN TAG – Premium Indicator
+=================================================== */
+.chain-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  transition: 0.25s ease;
+}
+
+.chain-tag:hover {
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px #00e5ff40;
+}
+
+.chain-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
+}
+
+.chain-tag span {
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  opacity: 0.85;
+}
+
+
+/* Right side vivamo */
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center; /* FIX: verhindert Abschneiden */
+}
+
+.powered-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.powered-label {
+  font-size: 10px;
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+}
+
+.logo-vivamo {
+  height: 28px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.25));
+  transition: 0.3s ease;
+}
+
+.logo-vivamo:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 14px rgba(0, 229, 255, 0.4));
+}
+/* ================================================
+   HERO
+=================================================== */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 520px;             /* feste Höhe = perfekte Kontrolle */
+  background: #0a0a0a;
+  overflow: hidden;
+  padding-top: 40px;
+}
+
+/* Gradient oben */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to bottom, #0a0a0a, transparent);
+  z-index: 5;
+}
+
+/* LEFT SIDE CONTENT */
+.hero-inner {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  padding-left: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.hero-content {
+  width: 520px;
+}
+
+.hero-content h1 {
+  font-size: 64px;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+
+.hero-content p {
+  font-size: 20px;
+  opacity: 0.8;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 14px 22px;
+  background: #00e5ff;
+  color: #000;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+
+/* ================================================
+   FIXED RIGHT IMAGE
+=================================================== */
+.hero-img-fixed {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 52vw;         /* Bildbreite */
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hero-img-fixed img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+/* ================================================
+   MOBILE
+=================================================== */
+@media(max-width: 900px) {
+
+  .hero {
+    height: auto;
+    padding-bottom: 20px;
+  }
+
+  .hero-inner {
+    padding: 40px 24px 0;
+    display: block;
+  }
+
+  .hero-img-fixed {
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    margin-top: 24px;
+  }
+
+  .hero-img-fixed img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-content h1 {
+    font-size: 42px;
+  }
+}
+
+/* -----------------------------------------
+   TEXTBLOCK LINKS
+----------------------------------------- */
+.hero-content {
+  flex: 0 0 520px;     /* fixe Breite – verhindert Überlappung */
+  max-width: 520px;
+  z-index: 10;         /* Text bleibt über dem Bild */
+}
+
+.hero-content h1 {
+  font-size: 64px;
+  line-height: 1.05;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.hero-content p {
+  font-size: 20px;
+  opacity: 0.8;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* CTA Button */
+.hero-btn {
+  display: inline-block;
+  padding: 14px 22px;
+  color: #000;
+  background: #00e5ff;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.hero-btn:hover {
+  background: #4df3ff;
+}
+
+/* -----------------------------------------
+   BILD RECHTS – FIXED UND FLÄCHENDECKEND
+----------------------------------------- */
+.hero-image-wrapper {
+  position: absolute;
+  top: 25px;               /* Abstand zum Header */
+  right: 0;
+  width: 48vw;             /* Bild nimmt rechten Bereich ein */
+  height: auto;
+  max-height: 640px;
+  display: block;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  border-radius: 0;
+}
+
+/* -----------------------------------------
+   RESPONSIVE – MOBILE
+----------------------------------------- */
+@media (max-width: 900px) {
+  .hero-inner {
+    flex-direction: column;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .hero-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    max-height: none;
+    margin-top: 20px;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-content h1 {
+    font-size: 42px;
+  }
+}
+
+/* ================================================
+   SIZE SELECTOR
+=================================================== */
+.size-section {
+  max-width: 900px;
+  margin: 80px auto 40px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.size-section h2 {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.size-grid {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.size-card {
+  width: 170px;
+  padding: 22px;
+  background: #0b0b0b;
+  border: 1px solid #222;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  position: relative;
+  text-align: center;
+}
+
+.size-card:hover {
+  border-color: #444;
+}
+
+.size-card.selected {
+  border-color: #00e5ff;
+  box-shadow: 0 0 15px #00e5ff60;
+}
+.size-icon-product {
+  width: 46px;
+  height: auto;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.size-tech {
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.75;
+  margin: 10px 0 14px;
+  text-align: left;
+}
+
+.size-title {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.size-price-group {
+  margin-top: 10px;
+}
+
+.old-price {
+  font-size: 14px;
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.new-price {
+  font-size: 20px;
+  font-weight: 600;
+  color: #00e5ff;
+}
+/* ================================================
+   SIZE SELECTOR – Info Block
+=================================================== */
+.size-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 22px;
+  opacity: 0.85;
+}
+
+.size-icon {
+  width: 36px;
+  height: auto;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.size-info p {
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 420px;
+  opacity: 0.75;
+}
+.size-intro {
+  margin-top: 10px;
+  opacity: 0.75;
+  font-size: 16px;
+}
+
+.size-notes {
+  margin-top: 12px;
+  opacity: 0.6;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.size-notes p {
+  margin: 4px 0;
+}
+
+/* Simple product icon styling */
+.size-icon-product {
+  width: 46px;
+  margin: 0 auto 10px;
+  opacity: 0.9;
+}
+
+.size-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+/* ================================================
+   SIZE SECTION — BUTTON STYLES
+=================================================== */
+
+.size-section {
+  padding: 80px 0;
+  text-align: center;
+}
+
+.size-section h2 {
+  font-size: 38px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.size-section .sub {
+  font-size: 16px;
+  opacity: 0.8;
+  line-height: 1.45;
+  margin-bottom: 45px;
+}
+
+.size-grid {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.size-card {
+  width: 240px;
+  padding: 32px 24px;
+  border-radius: 26px;
+  background: #0c0e11;
+  border: 1px solid #222;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.size-card:hover {
+  border-color: #00e5ff;
+  box-shadow: 0 0 16px #00e5ff33;
+  transform: translateY(-3px);
+}
+
+.size-card.selected {
+  border-color: #00e5ff;
+  box-shadow: 0 0 22px #00e5ff55;
+  transform: translateY(-3px);
+}
+.size-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.size-number {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.size-icon {
+  width: 54px;
+  height: auto;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 3px #00e5ff50);
+}
+
+.size-label {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.size-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #00e5ff;
+}
+.size-description {
+  margin-top: 8px;
+  line-height: 1.5;
+  opacity: 0.8;
+  font-size: 16px;
+}
+
+.size-table {
+  margin-top: 14px;
+  line-height: 1.5;
+  opacity: 0.9;
+  font-size: 15px;
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .size-description,
+  .size-table {
+    font-size: 14px;
+  }
+}
+
+/* ================================================
+   BACKPLATE COLORS
+=================================================== */
+.backplate-section {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.backplate-section h2 {
+  font-size: 32px;
+}
+
+.color-grid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 20px;
+  justify-items: center;
+}
+
+.color-swatch {
+  width: 78px;
+  height: 78px;
+  border-radius: 14px;
+  border: 1px solid #222;
+  background: #111;
+  cursor: pointer;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.25);
+  transition: 0.25s ease;
+  position: relative;
+}
+
+.color-swatch:hover {
+  transform: translateY(-4px) scale(1.03);
+  border-color: #555;
+}
+
+.color-swatch.selected {
+  border-color: #00e5ff;
+  box-shadow: 0 0 18px #00e5ff55, inset 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.color-label {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.55);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+
+/* ================================================
+   STEP CONTAINER
+=================================================== */
+.container {
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 20px;
+  border: 1px solid #222;
+  border-radius: 16px;
+  background: #0f0f0f;
+  box-shadow: 0 6px 28px rgba(0,0,0,.35);
+}
+
+.card {
+  padding: 16px;
+  border: 1px solid #222;
+  border-radius: 14px;
+  background: #0b0b0b;
+  margin-bottom: 20px;
+}
+
+input,
+select {
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #0f0f0f;
+  color: #eaeaea;
+  width: 100%;
+}
+
+button {
+  font-size: 16px;
+  background: #1f1f1f;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #2a2a2a;
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ================================================
+   FOOTER (VARIANTE A — Minimal)
+=================================================== */
+footer {
+  margin-top: 80px;
+  padding-bottom: 40px;
+  text-align: center;
+  opacity: 0.55;
+  font-size: 13px;
+}
+
+footer a {
+  color: #00e5ff;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+footer a:hover {
+  opacity: 1;
+}
+
+/* ================================================
+   RESPONSIVE
+=================================================== */
+@media (max-width: 900px) {
+  .hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .logo-flexblock {
+    width: 135px;
+  }
+
+  .logo-vivamo {
+    height: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .header-right {
+    width: 100%;
+    align-items: center;
+  }
+
+  .hero-copy h1 {
+    font-size: 40px;
+  }
+
+  .size-card {
+    width: 45%;
+  }
+
+  .color-swatch {
+    width: 60px;
+    height: 60px;
+  }
+}
+.verify-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 20px;
+}
+
+.verified-badge {
+  padding: 8px 16px;
+  background: #00e5ff15;
+  border: 1px solid #00e5ff55;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #00e5ff;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 14px #00e5ff30;
+  white-space: nowrap;
+}
+/* ----------------------------------------------
+   HERO: BIG IMAGE WITH TOP FADE
+---------------------------------------------- */
+.hero-media-edge {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  position: relative;
+  margin-top: -10px; /* zieht das Bild nah an den Header */
+  overflow: visible;
+}
+
+.hero-image-wrapper {
+  position: relative;
+  width: 520px;       /* großes Bild */
+  max-width: 100%;
+}
+
+.hero-edge-img {
+  width: 100%;
+  border-radius: 16px;
+  display: block;
+}
+
+/* Top fade-black overlay */
+.hero-image-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  background: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
+  border-radius: 16px 16px 0 0;
+  pointer-events: none;
+}
+
+/* LARGE SCREENS */
+@media (min-width: 1400px) {
+  .hero-image-wrapper {
+    width: 650px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .hero-media-edge {
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .hero-image-wrapper {
+    width: 90%;
+  }
+}
+/* ======================================================
+   FILMSTRIP – Endlos Galerie
+====================================================== */
+.filmstrip {
+  width: 100%;
+  overflow: hidden;
+  background: #0a0a0a;
+  margin-top: -10px;
+  padding: 0;
+}
+
+/* horizontales Laufband */
+.filmstrip-track {
+  display: flex;
+  gap: 0;
+  height: 180px;
+  flex-wrap: nowrap;
+  animation: stripScroll 35s linear infinite;
+}
+
+/* Bilder */
+.filmstrip img {
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  flex-shrink: 0;
+  opacity: 0.95;
+  filter: brightness(0.9);
+  transition: .3s ease;
+}
+
+/* Hover Effekt */
+.filmstrip img:hover {
+  opacity: 1;
+  filter: brightness(1);
+}
+
+/* Loop Animation */
+@keyframes stripScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* mobile */
+@media(max-width:900px){
+  .filmstrip-track {
+    height: 120px;
+    animation-duration: 25s;
+  }
+}
