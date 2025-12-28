@@ -1,0 +1,388 @@
+{
+  "colors": [
+    {
+      "name": "Deep Marine",
+      "code": "GS 5C01",
+      "hex": "#003f87",
+      "enabled": true
+    },
+    {
+      "name": "Electric Azure",
+      "code": "GS 5C18",
+      "hex": "#005f9e",
+      "enabled": false
+    },
+    {
+      "name": "Cobalt Drift",
+      "code": "GS 5H01",
+      "hex": "#004d80",
+      "enabled": false
+    },
+    {
+      "name": "Electric Sky",
+      "code": "GS 5H21",
+      "hex": "#0066a3",
+      "enabled": false
+    },
+    {
+      "name": "Ocean Frame",
+      "code": "GS 5H22",
+      "hex": "#007bbd",
+      "enabled": false
+    },
+    {
+      "name": "Polar Blue",
+      "code": "GS 5H48",
+      "hex": "#1a8ad9",
+      "enabled": false
+    },
+    {
+      "name": "Neon Tide",
+      "code": "GS 5H51",
+      "hex": "#3399ff",
+      "enabled": true
+    },
+    {
+      "name": "Arctic Azure",
+      "code": "GS 5H69",
+      "hex": "#66b3ff",
+      "enabled": false
+    },
+    {
+      "name": "Earthwood",
+      "code": "GS 8C01",
+      "hex": "#4b2e1e",
+      "enabled": true
+    },
+    {
+      "name": "Soft Ivory",
+      "code": "GS 1H02",
+      "hex": "#fff5d7",
+      "enabled": false
+    },
+    {
+      "name": "Pearl Sand",
+      "code": "GS 1H34",
+      "hex": "#f6e7c4",
+      "enabled": true
+    },
+    {
+      "name": "Golden Glow",
+      "code": "GS 1C33",
+      "hex": "#ffd500",
+      "enabled": true
+    },
+    {
+      "name": "Solar Amber",
+      "code": "GS 1H01",
+      "hex": "#ffdd22",
+      "enabled": false
+    },
+    {
+      "name": "Saffron Beam",
+      "code": "GS 1H20",
+      "hex": "#ffcc00",
+      "enabled": false
+    },
+    {
+      "name": "Honeyburst",
+      "code": "GS 1H46",
+      "hex": "#ffbb00",
+      "enabled": false
+    },
+    {
+      "name": "Urban Slate",
+      "code": "GS 7C14",
+      "hex": "#646464",
+      "enabled": true
+    },
+    {
+      "name": "Concrete Mist",
+      "code": "GS 7C58",
+      "hex": "#7d7d7d",
+      "enabled": false
+    },
+    {
+      "name": "Graphite Fog",
+      "code": "GS 7C59",
+      "hex": "#8a8a8a",
+      "enabled": false
+    },
+    {
+      "name": "Stone Cloud",
+      "code": "GS 7C63",
+      "hex": "#9c9c9c",
+      "enabled": false
+    },
+    {
+      "name": "Silver Dusk",
+      "code": "GS 7C64",
+      "hex": "#b0b0b0",
+      "enabled": true
+    },
+    {
+      "name": "Urban Slate",
+      "code": "GS 7C82",
+      "hex": "#999999",
+      "enabled": false
+    },
+    {
+      "name": "Mineral Frost",
+      "code": "GS 7C83",
+      "hex": "#777777",
+      "enabled": false
+    },
+    {
+      "name": "Crystal Mist",
+      "code": "GS 7H32",
+      "hex": "#4f4f4f",
+      "enabled": true
+    },
+    {
+      "name": "Deep Forest",
+      "code": "GS 6C14",
+      "hex": "#008060",
+      "enabled": true
+    },
+    {
+      "name": "Emerald Wave",
+      "code": "GS 6C77",
+      "hex": "#00a67a",
+      "enabled": false
+    },
+    {
+      "name": "Mint Surge",
+      "code": "GS 6H01",
+      "hex": "#00b488",
+      "enabled": true
+    },
+    {
+      "name": "Verdant Glow",
+      "code": "GS 6H02",
+      "hex": "#009e72",
+      "enabled": false
+    },
+    {
+      "name": "Fresh Meadow",
+      "code": "GS 6H62",
+      "hex": "#006b4a",
+      "enabled": true
+    },
+    {
+      "name": "Arctic Mint",
+      "code": "GS 6H66",
+      "hex": "#004f3a",
+      "enabled": false
+    },
+    {
+      "name": "Sunset Ember",
+      "code": "GS 2C04",
+      "hex": "#ff6600",
+      "enabled": false
+    },
+    {
+      "name": "Amber Flame",
+      "code": "GS 2H02",
+      "hex": "#ff8c22",
+      "enabled": true
+    },
+    {
+      "name": "Crimson Glow",
+      "code": "GS 3C01",
+      "hex": "#c00000",
+      "enabled": true
+    },
+    {
+      "name": "Ruby Ember",
+      "code": "GS 3C33",
+      "hex": "#d00000",
+      "enabled": false
+    },
+    {
+      "name": "Scarlet Flame",
+      "code": "GS 3H00",
+      "hex": "#ff2222",
+      "enabled": false
+    },
+    {
+      "name": "Neon Coral",
+      "code": "GS 3H01",
+      "hex": "#e60000",
+      "enabled": true
+    },
+    {
+      "name": "Rose Ember",
+      "code": "GS 3H05",
+      "hex": "#ff4444",
+      "enabled": true
+    },
+    {
+      "name": "Cherry Pulse",
+      "code": "GS 3H25",
+      "hex": "#cc0000",
+      "enabled": false
+    },
+    {
+      "name": "Soft Magenta",
+      "code": "GS 3H54",
+      "hex": "#aa0000",
+      "enabled": false
+    },
+    {
+      "name": "Radiant Rose",
+      "code": "GS 3H55",
+      "hex": "#990000",
+      "enabled": false
+    },
+    {
+      "name": "Fire Shift",
+      "code": "GS 3H56",
+      "hex": "#880000",
+      "enabled": true
+    },
+    {
+      "name": "Dark Cherry",
+      "code": "GS 3H67",
+      "hex": "#770000",
+      "enabled": false
+    },
+    {
+      "name": "Onyx Black",
+      "code": "GS 9C20",
+      "hex": "#000000",
+      "enabled": true
+    },
+    {
+      "name": "Carbon Shade",
+      "code": "GS 9H01",
+      "hex": "#0b0b0b",
+      "enabled": false
+    },
+    {
+      "name": "Midnight Void",
+      "code": "GS 9H10",
+      "hex": "#111111",
+      "enabled": false
+    },
+    {
+      "name": "Mineral Frost",
+      "code": "GS 6C03",
+      "hex": "#4fa387",
+      "enabled": true
+    },
+    {
+      "name": "Earth Shadow",
+      "code": "GS 7C22",
+      "hex": "#5a4a3a",
+      "enabled": false
+    },
+    {
+      "name": "Clay Mist",
+      "code": "GS 7C27",
+      "hex": "#6f5b47",
+      "enabled": false
+    },
+    {
+      "name": "Umber Glow",
+      "code": "GS 7C80",
+      "hex": "#4e3c2d",
+      "enabled": false
+    },
+    {
+      "name": "Earth Shadow",
+      "code": "GS 8C84",
+      "hex": "#3d2e23",
+      "enabled": false
+    },
+    {
+      "name": "Cosmic Violet",
+      "code": "GS 4C01",
+      "hex": "#662e91",
+      "enabled": true
+    },
+    {
+      "name": "Arctic White",
+      "code": "GS WH03",
+      "hex": "#ffffff",
+      "enabled": true
+    },
+    {
+      "name": "Electric Cobalt",
+      "code": "XT 5N370",
+      "hex": "#005b99",
+      "enabled": false
+    },
+    {
+      "name": "Electric Sky",
+      "code": "XT 5N870",
+      "hex": "#006fb7",
+      "enabled": false
+    },
+    {
+      "name": "Walnut Ember",
+      "code": "XT 8A570",
+      "hex": "#4b3b28",
+      "enabled": false
+    },
+    {
+      "name": "Cocoa Drift",
+      "code": "XT 8A870",
+      "hex": "#3c2b1d",
+      "enabled": false
+    },
+    {
+      "name": "Linen Glow",
+      "code": "XT 1N370",
+      "hex": "#f2e3bc",
+      "enabled": false
+    },
+    {
+      "name": "Citrus Flash",
+      "code": "XT 1N270",
+      "hex": "#ffd733",
+      "enabled": false
+    },
+    {
+      "name": "Golden Glow",
+      "code": "XT 1N870",
+      "hex": "#ffca00",
+      "enabled": false
+    },
+    {
+      "name": "Stone Cloud",
+      "code": "XT 7A670",
+      "hex": "#5f5f5f",
+      "enabled": false
+    },
+    {
+      "name": "Emerald Wave",
+      "code": "XT 6N570",
+      "hex": "#00996c",
+      "enabled": false
+    },
+    {
+      "name": "Molten Orange",
+      "code": "XT 2N170",
+      "hex": "#ff7a22",
+      "enabled": false
+    },
+    {
+      "name": "Rose Ember",
+      "code": "XT 3N570",
+      "hex": "#cc0000",
+      "enabled": false
+    },
+    {
+      "name": "Cherry Pulse",
+      "code": "XT 3N670",
+      "hex": "#b30000",
+      "enabled": true
+    },
+    {
+      "name": "True Black",
+      "code": "XT 9N871",
+      "hex": "#000000",
+      "enabled": false
+    }
+  ]
+}

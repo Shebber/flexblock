@@ -1,0 +1,16 @@
+-- CreateTable
+CREATE TABLE "Order" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "apeAmount" DECIMAL NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "TreasuryAdjustment" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "previousApe" DECIMAL NOT NULL,
+    "newApe" DECIMAL NOT NULL,
+    "deltaApe" DECIMAL NOT NULL,
+    "reason" TEXT NOT NULL
+);

@@ -1,889 +1,1348 @@
-/* ================================================
-   GLOBAL RESET
-=================================================== */
-:root {
+/* ==========================================================
+   Flexblock — styles.css (cleaned)
+   Notes:
+   - One source of truth for colors + layout
+   - Gradients removed from interactive buttons (Aqua/Magenta only)
+   - Duplicate / conflicting blocks removed
+========================================================== */
+
+/* ==========================================================
+   THEME TOKENS
+========================================================== */
+:root{
   color-scheme: dark;
+
+  --bg: #0a0a0a;
+  --panel: #0f1114;
+  --panel2: #12161b;
+
+  --text: #eaeaea;
+  --muted: rgba(234,234,234,.75);
+
+  /* Brand */
+  --aqua: #00eaff;        /* single source of truth (Wallet-Display Aqua) */
+  --magenta: #ff00ff;
+
+  /* Aliases (legacy) */
+  --mint: var(--aqua);
+  --flex-petrol: var(--aqua);
+  --flex-magenta: var(--magenta);
+
+  --border: rgba(255,255,255,.08);
+  --shadow: rgba(0,0,0,.55);
+
+  --success: #22c55e;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* ==========================================================
+   GLOBAL RESET + BASE
+========================================================== */
+*{ margin:0; padding:0; box-sizing:border-box; }
 
-html,
-body {
-  background: #0a0a0a;
-  color: #eaeaea;
-  margin: 0;
-  padding: 0;
+html,body{
+  background: var(--bg);
+  color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  overflow-x: hidden;
+  overflow-x:hidden;
 }
 
-img {
-  display: block;
-  max-width: 100%;
-}
+img{ display:block; max-width:100%; }
 
-a {
-  color: #00e5ff;
-  text-decoration: none;
-}
+a{ color: var(--aqua); text-decoration:none; }
+a:hover{ text-decoration:underline; }
 
-.sub {
-  opacity: 0.75;
-}
+.sub{ opacity:.75; }
 
 /* Utility */
-.row {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
+.row{
+  display:flex;
+  gap:18px;
+  align-items:center;
+  flex-wrap:wrap;
 }
 
-/* ================================================
+/* ==========================================================
    TOPBAR / HEADER
-=================================================== */
+========================================================== */
+
+
+
 .topbar {
   width: 100%;
-  padding: 20px 38px;
+  
+  /* 🟢 Hier bestimmen wir, wo das Schwarz aufhört */
+  height: 80px; 
+  
+  /* Nur seitliches Padding */
+  padding: 0 38px;
+  
+  /* WICHTIG: Damit das Logo ausbrechen darf */
+  overflow: visible; 
+  
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
   z-index: 20;
-  background: rgba(15, 15, 15, 0.65);
+
+  background: rgba(15,15,15,.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255,255,255,.05);
 }
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:16px;
 }
 
 .logo-flexblock {
-  width: 160px;
+  /* 🟢 Absolut, damit es den Header nicht aufdrückt */
+  position: absolute;
+  top: 10px;    /* Etwas Abstand von ganz oben */
+  left: 38px;   /* Bündig mit dem Seitenrand */
+  
+  width: 160px; /* Deine Größe */
   height: auto;
-  filter: drop-shadow(0 0 18px #00e5ff55);
-  transition: 0.3s ease;
+  
+  /* 🟢 Höherer Z-Index als das Hero-Bild, damit es drüber liegt */
+  z-index: 50; 
+  
+  filter: drop-shadow(0 0 18px rgba(0,234,255,.35));
+  transition: .3s ease;
 }
-
-.logo-flexblock:hover {
-  filter: drop-shadow(0 0 24px #00e5ff99);
+.logo-flexblock:hover{
+  filter: drop-shadow(0 0 24px rgba(0,234,255,.60));
   transform: translateY(-2px);
 }
 
-/* ================================================
-   CHAIN TAG – Premium Indicator
-=================================================== */
-.chain-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 10px;
-  backdrop-filter: blur(6px);
-  transition: 0.25s ease;
+/* Wallet-Device slot wrapper */
+.wallet-slot{ position:relative; }
+
+/* IMPORTANT: fixed overlay in the viewport */
+.wallet-device-wrapper{
+  position:fixed;
+  top:0;
+  right:0;
+  width:555px;
+  height:165px;
+  z-index:999;
+  pointer-events:none;
 }
 
-.chain-tag:hover {
-  border-color: #00e5ff;
-  box-shadow: 0 0 10px #00e5ff40;
+/* Header Wallet Connect Button (if you still render one in header) */
+.wallet-slot button{
+  background: var(--aqua);
+  color:#000;
+  border:none;
+  border-radius:14px;
+  padding:10px 18px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow: 0 0 14px rgba(0,234,255,.35);
+  transition:.25s ease;
+}
+.wallet-slot button:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(0,234,255,.55);
+}
+.wallet-slot button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
 }
 
-.chain-icon {
-  width: 18px;
-  height: 18px;
-  opacity: 0.9;
+/* ==========================================================
+   WALLET DEVICE (PNG + LED + 14-seg SVG)
+========================================================== */
+.wallet-device{
+  position:absolute;
+  top:0;
+  right:0;
+  width:555px;
+  height:165px;
+  pointer-events:none;
 }
 
-.chain-tag span {
-  font-size: 13px;
-  letter-spacing: 0.2px;
-  opacity: 0.85;
+.wallet-device-frame{
+  position:absolute;
+  width:555px;
+  height:165px;
+  z-index:1;
+  pointer-events:none;
 }
 
+/* ---------- LEDs (left column) ---------- */
+.led-1{ top:41px; }
+.led-2{ top:70px; }
+.led-3{ top:97px; }
+.led-4{ top:128px; }
 
-/* Right side vivamo */
-.header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center; /* FIX: verhindert Abschneiden */
+.wallet-leds{
+  position:absolute;
+  top:0;
+  left:31px;
+  width:20px;
+  height:150px;
+  z-index:3;
 }
 
-.powered-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+.wallet-leds .led{
+  position:absolute;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  filter: blur(2px);
 }
 
-.powered-label {
-  font-size: 10px;
-  opacity: 0.55;
-  letter-spacing: 0.5px;
+/* single-color only */
+.led.aqua{
+  background: rgba(0,255,255,.9);
+  box-shadow: 0 0 8px rgba(0,255,255,.7);
+}
+.led.magenta{
+  background: rgba(255,0,255,.9);
+  box-shadow: 0 0 8px rgba(255,0,255,.7);
 }
 
-.logo-vivamo {
-  height: 28px;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.25));
-  transition: 0.3s ease;
+/* chase */
+@keyframes chase{
+  0%{ opacity:1; }
+  25%{ opacity:.3; }
+  50%{ opacity:1; }
+  75%{ opacity:.3; }
+  100%{ opacity:1; }
+}
+.chase-1{ animation: chase 1s infinite linear; }
+.chase-2{ animation: chase 1s infinite linear .25s; }
+.chase-3{ animation: chase 1s infinite linear .5s; }
+.chase-4{ animation: chase 1s infinite linear .75s; }
+
+/* ---------- Display area ---------- */
+.wallet-display{
+  position:absolute;
+  left:78px;
+  top:63px;
+  width:283px;
+  height:61px;
+  z-index:4;
+
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+
+  /* LCD blur ONLY here */
+  filter: none;
+}
+.wallet-display::after{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  pointer-events:none;
+  border-radius:10px;
+  backdrop-filter: blur(2.2px);
+  -webkit-backdrop-filter: blur(2.2px);
+  opacity:.85;
 }
 
-.logo-vivamo:hover {
+/* rows are fixed-size so nothing stretches weird */
+.display-row{
+  position:relative;
+  display:grid;
+  grid-template-columns: repeat(16, 16px);
+  gap:1px;
+  height:26px;
+  z-index:1;
+}
+
+.digit{
+  width:16px;
+  height:26px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+.digit-svg{
+  width:16px;   /* scales viewBox 18x26 -> fits */
+  height:26px;
+  display:block;
+  overflow:visible;
+}
+
+/* ---------- Segment styling ---------- */
+.seg{ transition: .1s ease-out; }
+
+/* OFF = subtle but present */
+.seg.off{
+  fill: rgba(0,0,0,.20);
+  opacity: .22;
+  filter: none;
+}
+
+/* ON = aqua glow */
+.seg.on{
+  fill: var(--aqua);
   opacity: 1;
-  filter: drop-shadow(0 0 14px rgba(0, 229, 255, 0.4));
-}
-/* ================================================
-   HERO
-=================================================== */
-.hero {
-  position: relative;
-  width: 100%;
-  height: 520px;             /* feste Höhe = perfekte Kontrolle */
-  background: #0a0a0a;
-  overflow: hidden;
-  padding-top: 40px;
+  filter: drop-shadow(0 0 5px rgba(0,234,255,.80));
 }
 
-/* Gradient oben */
-.hero::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 100px;
-  background: linear-gradient(to bottom, #0a0a0a, transparent);
-  z-index: 5;
+/* Optional “glitch” classes (used by JS later) */
+.seg.on.weak{
+  opacity:.35;
+  filter: drop-shadow(0 0 2px rgba(0,234,255,.80));
+}
+@keyframes segFlicker{
+  0%{ opacity:1; }
+  50%{ opacity:.15; }
+  100%{ opacity:1; }
+}
+.seg.on.flicker{
+  animation: segFlicker .18s steps(2) infinite;
+}
+.seg.on.magenta{
+  fill: var(--magenta);
+  filter: drop-shadow(0 0 5px rgba(255,0,255,.80));
 }
 
-/* LEFT SIDE CONTENT */
-.hero-inner {
-  position: relative;
-  z-index: 10;
-  height: 100%;
-  padding-left: 60px;
-  display: flex;
-  align-items: center;
+/* Important: don’t override rect fill globally (kills diagonal visibility) */
+/* (intentionally no .digit-svg rect { ... } rule) */
+
+/* ---------- Hardware button overlay ---------- */
+.wallet-button{
+  position:absolute;
+  left:425px;
+  top:68px;
+  width:38px;
+  height:45px;
+
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  -moz-appearance:none !important;
+
+  border:none !important;
+  outline:none !important;
+  background: transparent;
+
+  border-radius:80% / 90% !important;
+
+  z-index:9;
+  pointer-events:auto;
+  cursor:pointer;
+
+  filter: blur(1.5px);
 }
 
-.hero-content {
-  width: 520px;
+.wallet-button.aqua{
+  background: rgba(0,255,255,.9);
+  box-shadow: 0 0 12px rgba(0,255,255,.8), 0 0 20px rgba(0,255,255,.5);
+}
+.wallet-button.magenta{
+  background: rgba(255,0,255,.9);
+  box-shadow: 0 0 12px rgba(255,0,255,.8), 0 0 20px rgba(255,0,255,.5);
+}
+@keyframes pulse-glow{
+  0%{ filter: brightness(.75) blur(1.5px); }
+  50%{ filter: brightness(1.35) blur(2.4px); }
+  100%{ filter: brightness(.75) blur(1.5px); }
+}
+.wallet-button.pulse{ animation: pulse-glow 1.4s ease-in-out infinite; }
+
+/* ==========================================================
+   HERO (Image left, Copy right)
+========================================================== */
+.hero{
+  position:relative;
+  width:100%;
+  height:720px;
+  background: var(--bg);
+  overflow:hidden;
+  padding-top:100px;
+}
+.hero::before{
+  content:"";
+  position:absolute;
+  top:0;
+  width:100%;
+  height:100px;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+  z-index:5;
 }
 
-.hero-content h1 {
-  font-size: 64px;
-  line-height: 1.05;
-  margin-bottom: 16px;
-}
-
-.hero-content p {
-  font-size: 20px;
-  opacity: 0.8;
-  margin-bottom: 28px;
-  line-height: 1.5;
-}
-
-.hero-btn {
-  display: inline-block;
-  padding: 14px 22px;
-  background: #00e5ff;
-  color: #000;
-  border-radius: 10px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-
-/* ================================================
-   FIXED RIGHT IMAGE
-=================================================== */
+/* image LEFT */
 .hero-img-fixed {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 52vw;         /* Bildbreite */
-  height: 100%;
+  
+  /* 🟢 FIX: Bild klebt jetzt ganz oben an der Browser-Kante */
+  top: 0; 
+  
+  left: 0;
+  width: 52vw;
+  
+  /* 🟢 FIX: Da es bei 0 startet, nehmen wir die volle Höhe */
+  height: 100%; 
+  
   overflow: hidden;
   z-index: 1;
 }
-
-.hero-img-fixed img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.hero-img-fixed img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
 
+/* copy RIGHT */
+.hero-inner{
+  position:relative;
+  z-index:10;
+  height:100%;
+  width:48vw;          /* rest besides image */
+  margin-left:auto;    /* push to right half */
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
 
-/* ================================================
-   MOBILE
-=================================================== */
-@media(max-width: 900px) {
+  /* tweak: moves text block slightly right to align with wallet display */
+  padding-right: 26px; /* was 60px; smaller = further right */
+  padding-left: 0;
+}
+.hero-content{
+  flex:0 0 520px;
+  max-width:520px;
+}
 
-  .hero {
-    height: auto;
-    padding-bottom: 20px;
-  }
+.hero-content h1{
+  font-size:64px;
+  line-height:1.05;
+  margin-bottom:16px;
+  font-weight:700;
+  color: var(--aqua);
+}
+.hero-content p{
+  font-size:20px;
+  opacity:.8;
+  margin-bottom:28px;
+  line-height:1.5;
+}
 
-  .hero-inner {
+.hero-btn{
+  display:inline-block;
+  padding:14px 22px;
+  background: var(--aqua);
+  color:#000;
+  border-radius:10px;
+  font-weight:700;
+  border:none;
+  cursor:pointer;
+  transition:.2s ease;
+  box-shadow: 0 0 18px rgba(0,234,255,.35);
+}
+.hero-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(0,234,255,.55);
+}
+
+/* mobile */
+@media (max-width: 900px){
+  .hero{ height:auto; padding-bottom:20px; }
+  .hero-inner{
+    width:100%;
     padding: 40px 24px 0;
-    display: block;
+    display:block;
+    margin-left:0;
+    text-align:left;
   }
-
-  .hero-img-fixed {
-    position: relative;
-    width: 100%;
-    height: 50vh;
-    margin-top: 24px;
+  .hero-img-fixed{
+    position:relative;
+    width:100%;
+    height:50vh;
+    margin-bottom:24px;
   }
-
-  .hero-img-fixed img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .hero-content h1 {
-    font-size: 42px;
-  }
+  .hero-content h1{ font-size:42px; }
 }
 
-/* -----------------------------------------
-   TEXTBLOCK LINKS
------------------------------------------ */
-.hero-content {
-  flex: 0 0 520px;     /* fixe Breite – verhindert Überlappung */
-  max-width: 520px;
-  z-index: 10;         /* Text bleibt über dem Bild */
-}
-
-.hero-content h1 {
-  font-size: 64px;
-  line-height: 1.05;
-  margin-bottom: 16px;
-  font-weight: 700;
-}
-
-.hero-content p {
-  font-size: 20px;
-  opacity: 0.8;
-  margin-bottom: 28px;
-  line-height: 1.5;
-}
-
-/* CTA Button */
-.hero-btn {
-  display: inline-block;
-  padding: 14px 22px;
-  color: #000;
-  background: #00e5ff;
-  border-radius: 10px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: 0.2s;
-}
-.hero-btn:hover {
-  background: #4df3ff;
-}
-
-/* -----------------------------------------
-   BILD RECHTS – FIXED UND FLÄCHENDECKEND
------------------------------------------ */
-.hero-image-wrapper {
-  position: absolute;
-  top: 25px;               /* Abstand zum Header */
-  right: 0;
-  width: 48vw;             /* Bild nimmt rechten Bereich ein */
-  height: auto;
-  max-height: 640px;
-  display: block;
-  overflow: hidden;
-  z-index: 2;
-}
-
-.hero-image {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  display: block;
-  border-radius: 0;
-}
-
-/* -----------------------------------------
-   RESPONSIVE – MOBILE
------------------------------------------ */
-@media (max-width: 900px) {
-  .hero-inner {
-    flex-direction: column;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
-  .hero-image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 50vh;
-    max-height: none;
-    margin-top: 20px;
-  }
-
-  .hero-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .hero-content h1 {
-    font-size: 42px;
-  }
-}
-
-/* ================================================
-   SIZE SELECTOR
-=================================================== */
-.size-section {
-  max-width: 900px;
-  margin: 80px auto 40px;
-  padding: 0 24px;
-  text-align: center;
-}
-
-.size-section h2 {
-  font-size: 32px;
-  margin-bottom: 6px;
-}
-
-.size-grid {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 24px;
-  flex-wrap: wrap;
-}
-
-.size-card {
-  width: 170px;
-  padding: 22px;
-  background: #0b0b0b;
-  border: 1px solid #222;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: 0.25s ease;
+/* ==========================================================
+   FILMSTRIP (optional)
+========================================================== */
+.filmstrip {
+  margin-top: -130px;   /* exakt der gefühlte Abstand */
   position: relative;
-  text-align: center;
+  z-index: 5;
 }
 
-.size-card:hover {
-  border-color: #444;
+.filmstrip-track{
+  display:flex;
+  gap:0;
+  height:180px;
+  flex-wrap:nowrap;
+  animation: stripScroll 35s linear infinite;
+}
+.filmstrip img{
+  height:100%;
+  width:auto;
+  object-fit:cover;
+  flex-shrink:0;
+  opacity:.95;
+  filter: brightness(.9);
+  transition:.3s ease;
+}
+.filmstrip img:hover{ opacity:1; filter: brightness(1); }
+@keyframes stripScroll{
+  0%{ transform: translateX(0); }
+  100%{ transform: translateX(-50%); }
+}
+@media (max-width:900px){
+  .filmstrip-track{ height:120px; animation-duration:25s; }
 }
 
-.size-card.selected {
-  border-color: #00e5ff;
-  box-shadow: 0 0 15px #00e5ff60;
+/* ==========================================================
+   BACKPLATE COLORS (pills + wobble)
+========================================================== */
+.backplate-section{
+  max-width:900px;
+  margin:60px auto;
+  padding:0 24px;
+  text-align:center;
 }
-.size-icon-product {
-  width: 46px;
-  height: auto;
-  margin-bottom: 12px;
-  opacity: 0.9;
+.backplate-section h2{ font-size:32px; }
+
+.color-grid{
+  margin-top:32px;
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap:20px;
+  justify-items:center;
 }
 
-.size-tech {
-  font-size: 12px;
-  line-height: 1.45;
-  opacity: 0.75;
-  margin: 10px 0 14px;
-  text-align: left;
+.color-swatch{
+  width:96px;
+  height:46px;
+  Border-radius:15px;     
+  border:1px solid rgba(255,255,255,.10);
+  background:#111;
+  cursor:pointer;
+  position:relative;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.35);
+  transition: .22s ease;
 }
 
-.size-title {
-  font-size: 22px;
-  margin-bottom: 6px;
+@keyframes wobble{
+  0%{ transform: translateY(-2px) rotate(0deg); }
+  35%{ transform: translateY(-3px) rotate(-1.4deg); }
+  70%{ transform: translateY(-3px) rotate(1.2deg); }
+  100%{ transform: translateY(-2px) rotate(0deg); }
+}
+.color-swatch:hover{
+  border-color: rgba(255,255,255,.22);
+  animation: wobble .35s ease-in-out both;
+}
+.color-swatch.selected{
+  border-color: var(--aqua);
+  box-shadow: 0 0 18px rgba(0,234,255,.35),
+              inset 0 0 10px rgba(0,0,0,.45);
 }
 
-.size-price-group {
-  margin-top: 10px;
-}
+/* Color names: centered overlay, show on hover + always on selected */
+.color-label{
+  position: absolute;
+  inset: 0;
 
-.old-price {
-  font-size: 14px;
-  opacity: 0.55;
-  text-decoration: line-through;
-}
-
-.new-price {
-  font-size: 20px;
-  font-weight: 600;
-  color: #00e5ff;
-}
-/* ================================================
-   SIZE SELECTOR – Info Block
-=================================================== */
-.size-info {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-bottom: 22px;
-  opacity: 0.85;
-}
-
-.size-icon {
-  width: 36px;
-  height: auto;
-  margin-bottom: 10px;
-  opacity: 0.9;
-}
-
-.size-info p {
-  font-size: 14px;
-  line-height: 1.5;
+  justify-content: center;
   text-align: center;
-  max-width: 420px;
-  opacity: 0.75;
-}
-.size-intro {
-  margin-top: 10px;
-  opacity: 0.75;
-  font-size: 16px;
-}
 
-.size-notes {
-  margin-top: 12px;
-  opacity: 0.6;
-  font-size: 14px;
-  line-height: 1.45;
-}
-.size-notes p {
-  margin: 4px 0;
-}
+  padding: 10px;
 
-/* Simple product icon styling */
-.size-icon-product {
-  width: 46px;
-  margin: 0 auto 10px;
-  opacity: 0.9;
-}
-
-.size-title {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 14px;
-}
-/* ================================================
-   SIZE SECTION — BUTTON STYLES
-=================================================== */
-
-.size-section {
-  padding: 80px 0;
-  text-align: center;
-}
-
-.size-section h2 {
-  font-size: 38px;
+  background: transparent; /* kein Label-Rahmen */
+  font-size: 12px;
   font-weight: 700;
-  margin-bottom: 16px;
+  letter-spacing: .02em;
+  line-height: 1.15;
+  color: rgba(255,255,255,.92);
+
+  text-shadow:
+    0 2px 10px rgba(0,0,0,.85),
+    0 0 16px rgba(0,0,0,.55);
+
+  pointer-events: none;
+
+  opacity: 0;
+  transform: translateY(4px);
+  transition: .2s ease;
 }
 
-.size-section .sub {
+.color-swatch:hover .color-label{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ✅ Selected: label stays visible */
+.color-swatch.selected .color-label{
+  opacity: 1;
+  transform: none;
+}
+
+
+/* ==========================================================
+   SIZE SECTION (Builder Step 1)
+========================================================== */
+.size-section{
+  padding: 80px 0;
+  text-align:center;
+}
+.size-section h2{
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.size-section .sub{
   font-size: 16px;
-  opacity: 0.8;
+  opacity: .8;
   line-height: 1.45;
   margin-bottom: 45px;
 }
 
-.size-grid {
-  display: flex;
-  justify-content: center;
-  gap: 26px;
-  flex-wrap: wrap;
-  margin-top: 20px;
+.size-grid{
+  display:flex;
+  justify-content:center;
+  gap:26px;
+  flex-wrap:wrap;
+  margin-top:20px;
 }
 
-.size-card {
-  width: 240px;
-  padding: 32px 24px;
-  border-radius: 26px;
+.size-card{
+  width:240px;
+  padding:32px 24px;
+  border-radius:26px;
   background: #0c0e11;
-  border: 1px solid #222;
-  cursor: pointer;
-  transition: all 0.25s ease;
+  border: 1px solid rgba(255,255,255,.10);
+  cursor:pointer;
+  transition: all .25s ease;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:18px;
+}
+.size-card:hover{
+  border-color: rgba(0,234,255,.55);
+  box-shadow: 0 0 16px rgba(0,234,255,.20);
+  transform: translateY(-3px);
+}
+.size-card.selected{
+  border-color: rgba(0,234,255,.85);
+  box-shadow: 0 0 22px rgba(0,234,255,.32);
+  transform: translateY(-3px);
+}
+
+.size-line{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.size-number{
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:.5px;
+}
+.size-icon{
+  width:54px;
+  height:auto;
+  opacity:.95;
+  filter: drop-shadow(0 0 3px rgba(0,234,255,.35));
+}
+.size-label{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+.size-price{
+  font-size:24px;
+  font-weight:800;
+  color: var(--aqua);
+}
+.size-description{
+  margin-top:8px;
+  line-height:1.5;
+  opacity:.8;
+  font-size:16px;
+}
+.size-table{
+  margin-top:14px;
+  line-height:1.5;
+  opacity:.9;
+  font-size:15px;
+  font-weight:700;
+}
+@media (max-width: 600px){
+  .size-card{ width: 45%; }
+  .size-description, .size-table{ font-size:14px; }
+}
+
+/* ==========================================================
+   SHIPPING (form grid helper)
+========================================================== */
+.form-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+@media (max-width: 700px){
+  .form-grid{ grid-template-columns: 1fr; }
+}
+
+/* ==========================================================
+   STEP CONTAINER + CARDS (generic)
+========================================================== */
+.container{
+  max-width:760px;
+  margin:40px auto;
+  padding:20px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background: var(--panel);
+  box-shadow: 0 6px 28px rgba(0,0,0,.35);
+}
+
+.card{
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background: #0b0b0b;
+  margin-bottom:20px;
+}
+
+/* Base form controls */
+input, select, textarea{
+  font-size:16px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background: #0f0f0f;
+  color: var(--text);
+  width:100%;
+  outline:none;
+}
+input::placeholder{ color: rgba(234,234,234,.45); }
+
+/* Base buttons (non-wallet) */
+button{
+  font-size:16px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.2s ease;
+}
+button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
+/* ==========================================================
+   VERIFY SECTION (Builder Step 2)
+========================================================== */
+.cinematic-verify{
+  padding: 70px 0 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+.cinematic-step-label{
+  font-size: 30px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  color: var(--aqua);
+  text-align:center;
+}
+.cinematic-sub{
+  opacity: .68;
+  margin-bottom: 26px;
+  font-size: 14px;
+  letter-spacing: .02em;
+  text-align:center;
+}
+
+.verify-box{
+  max-width: 920px;
+  margin: 0 auto;
+  background: rgba(18,22,27,.88);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 22px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+}
+
+/* --- Input row: contract + token + button --- */
+.verify-fields{
+  display:grid;
+  grid-template-columns: 1fr 140px 150px;
+  gap: 12px;
+  align-items:center;
+}
+
+/* Blurry-lines frame wrapper (used in your JSX) */
+.blurry-field{
+  position:relative;
+  border-radius:14px;
+  padding:1px; /* lets the glow sit outside */
+}
+.blurry-field::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:16px;
+  background: radial-gradient(circle at 25% 15%,
+    rgba(0,234,255,.45),
+    transparent 60%);
+  filter: blur(8px);
+  opacity:.65;
+  pointer-events:none;
+}
+.blurry-field::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  border: 1px solid rgba(0,234,255,.38);
+  filter: blur(.5px);
+  opacity:.85;
+  pointer-events:none;
+}
+
+/* keep inputs readable */
+.verify-input{
+  background: rgba(13,16,20,.92);
+  border: 1px solid rgba(255,255,255,.10);
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 14px;
+  width:100%;
+}
+
+.verify-input.small{
+  max-width: 140px;
+}
+.verify-input:focus{
+  border-color: rgba(0,234,255,.55);
+  box-shadow: 0 0 0 1px rgba(0,234,255,.25);
+}
+
+/* Solid aqua button (class name kept for compatibility) */
+.btn-gradient{
+  background: var(--aqua);
+  color:#021314;
+  font-weight: 800;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  height: 44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 0 18px rgba(0,234,255,.35);
+}
+.btn-gradient:hover:not(:disabled){
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(0,234,255,.55);
+}
+
+/* Error */
+.verify-error{
+  color: #ff6b91;
+  margin-top: 10px;
+  text-align:center;
+  font-size: 13px;
+}
+
+/* Result layout: image + status on the right */
+.verify-layout{
+  margin-top: 18px;
+  display:grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items:center;
+  justify-content:start;
+}
+
+/* Image: smaller + no black card behind it */
+.preview-img{
+  width: 240px;
+  max-width: 100%;
+  border-radius: 14px;
+  display:block;
+}
+
+/* Right-side verified row (showcase friendly) */
+.verify-status{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.verify-okline{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--aqua);
+}
+
+.verify-check{
+  font-size: 42px;
+  line-height: 1;
+  color: var(--success);
+  filter: drop-shadow(0 0 14px rgba(34,197,94,.55));
+}
+
+.verify-next-hint{
+  font-size: 14px;
+  opacity: .75;
+  white-space: nowrap;
+}
+
+/* responsive */
+@media (max-width: 900px){
+  .cinematic-verify{ padding-left:20px; padding-right:20px; }
+  .verify-fields{
+    grid-template-columns: 1fr;
+  }
+  .btn-gradient{ width:100%; }
+  .verify-layout{
+    grid-template-columns: 1fr;
+    justify-items:center;
+    text-align:center;
+  }
+  .verify-status{ align-items:center; }
+  .verify-next-hint{ white-space: normal; }
+}
+
+/* ==========================================================
+   SOCIAL ICONS (fix “gigantic icons”)
+========================================================== */
+.social-links{
+  margin: 20px 0;
+  display:flex;
+  justify-content:center;
+  gap:22px;
+}
+.social-links img{
+  width:28px !important;
+  height:28px !important;
+  max-width:none !important;
+  opacity:.75;
+  filter: drop-shadow(0 0 4px rgba(94,234,212,.25));
+  transition:.25s ease;
+  cursor:pointer;
+}
+.social-links img:hover{
+  opacity:1;
+  transform: translateY(-3px);
+  filter: drop-shadow(0 0 8px rgba(94,234,212,.45));
+}
+
+/* ==========================================================
+   FOOTER (minimal)
+========================================================== */
+footer{
+  margin-top:80px;
+  padding-bottom:40px;
+  text-align:center;
+  opacity:.55;
+  font-size:13px;
+}
+footer a{ color: var(--aqua); font-size:13px; opacity:.7; }
+footer a:hover{ opacity:1; }
+
+/* ==========================================================
+   RESPONSIVE (site-wide)
+========================================================== */
+@media (max-width: 900px){
+  .logo-flexblock{ width:135px; }
+}
+@media (max-width: 600px){
+  .topbar{
+    padding:14px 16px;
+    flex-wrap:wrap;
+    row-gap:12px;
+  }
+}
+
+/* ==========================================================
+   CHECKOUT (kept, but isolated)
+========================================================== */
+.checkout-wrapper{
+  display:flex;
+  padding:60px;
+  gap:60px;
+  background:#0b0d10;
+  min-height:100vh;
+  color:#e6e9ee;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  position:relative;
+}
+
+.checkout-brand{
+  position:fixed;
+  top:22px;
+  right:28px;
+  z-index:9999;
+  opacity:.85;
+}
+.checkout-brand img{
+  height:36px;
+  filter: drop-shadow(0 0 6px #000);
+  transition: opacity .25s ease;
+}
+.checkout-brand img:hover{ opacity:1; }
+
+.checkout-left{
+  width:45%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.checkout-right{
+  width:55%;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+@media (max-width: 1000px){
+  .checkout-wrapper{
+    flex-direction:column;
+    padding:40px 24px;
+  }
+  .checkout-left, .checkout-right{ width:100%; }
+  .checkout-brand{
+    position:absolute;
+    top:14px;
+    right:14px;
+  }
+}
+/* ==========================================================
+   FIX: Social Icons nicht mehr riesig
+   (am besten GANZ ans Ende der styles.css)
+========================================================== */
+
+.social-links,
+.footer-social{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:22px;
+}
+
+.social-links a,
+.footer-social a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;
+  height:32px;
+}
+
+.social-links img,
+.footer-social img{
+  width:28px !important;
+  height:28px !important;
+  max-width:28px !important;
+  max-height:28px !important;
+  object-fit:contain;
+  display:block;
+}
+/* ================================================
+   VERIFY SUCCESS (NFT + VERIFIED SIDE)
+   -> ans ENDE der styles.css packen
+=================================================== */
+
+/* Layout nach erfolgreichem Verify */
+.verify-layout{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  margin-bottom: 58px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+/* NFT Frame (links) */
+.glow-frame{
+  padding: 10px;                 /* weniger “leerer Rand” */
+  border-radius: 16px;
+}
+
+.preview-img{
+  width: 230px;                  /* kleiner fürs Showcase */
+  max-width: 100%;
+  display: block;
+  border-radius: 14px;
+  border: 2px solid #5eead4;
+  background: transparent;       /* kein schwarzer Block */
+}
+
+/* Verified Panel (rechts) */
+.verified-panel{
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 18px;
+  justify-content: space-between;
+  padding: 10px 10px 8px;
+  min-width: 0;                  /* verhindert Overflow */
 }
 
-.size-card:hover {
-  border-color: #00e5ff;
-  box-shadow: 0 0 16px #00e5ff33;
-  transform: translateY(-3px);
-}
-
-.size-card.selected {
-  border-color: #00e5ff;
-  box-shadow: 0 0 22px #00e5ff55;
-  transform: translateY(-3px);
-}
-.size-line {
+.verified-head{
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.size-number {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.size-icon {
-  width: 54px;
-  height: auto;
-  opacity: 0.95;
-  filter: drop-shadow(0 0 3px #00e5ff50);
-}
-
-.size-label {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.size-price {
-  font-size: 24px;
-  font-weight: 700;
-  color: #00e5ff;
-}
-.size-description {
-  margin-top: 8px;
-  line-height: 1.5;
-  opacity: 0.8;
-  font-size: 16px;
-}
-
-.size-table {
-  margin-top: 14px;
-  line-height: 1.5;
-  opacity: 0.9;
-  font-size: 15px;
-  font-weight: 600;
-}
-@media (max-width: 600px) {
-  .size-description,
-  .size-table {
-    font-size: 14px;
-  }
-}
-
-/* ================================================
-   BACKPLATE COLORS
-=================================================== */
-.backplate-section {
-  max-width: 900px;
-  margin: 60px auto;
-  padding: 0 24px;
-  text-align: center;
-}
-
-.backplate-section h2 {
-  font-size: 32px;
-}
-
-.color-grid {
-  margin-top: 32px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-  gap: 20px;
-  justify-items: center;
-}
-
-.color-swatch {
-  width: 78px;
-  height: 78px;
-  border-radius: 14px;
-  border: 1px solid #222;
-  background: #111;
-  cursor: pointer;
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.25);
-  transition: 0.25s ease;
-  position: relative;
-}
-
-.color-swatch:hover {
-  transform: translateY(-4px) scale(1.03);
-  border-color: #555;
-}
-
-.color-swatch.selected {
-  border-color: #00e5ff;
-  box-shadow: 0 0 18px #00e5ff55, inset 0 0 10px rgba(0, 0, 0, 0.4);
-}
-
-.color-label {
-  position: absolute;
-  bottom: 6px;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.55);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  text-align: center;
-  backdrop-filter: blur(4px);
-}
-
-/* ================================================
-   STEP CONTAINER
-=================================================== */
-.container {
-  max-width: 760px;
-  margin: 40px auto;
-  padding: 20px;
-  border: 1px solid #222;
-  border-radius: 16px;
-  background: #0f0f0f;
-  box-shadow: 0 6px 28px rgba(0,0,0,.35);
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid #222;
-  border-radius: 14px;
-  background: #0b0b0b;
-  margin-bottom: 20px;
-}
-
-input,
-select {
-  font-size: 16px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #333;
-  background: #0f0f0f;
-  color: #eaeaea;
-  width: 100%;
-}
-
-button {
-  font-size: 16px;
-  background: #1f1f1f;
-  color: #fff;
-  border: 1px solid #333;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  background: #2a2a2a;
-}
-
-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* ================================================
-   FOOTER (VARIANTE A — Minimal)
-=================================================== */
-footer {
-  margin-top: 80px;
-  padding-bottom: 40px;
-  text-align: center;
-  opacity: 0.55;
-  font-size: 13px;
-}
-
-footer a {
-  color: #00e5ff;
-  font-size: 13px;
-  opacity: 0.7;
-}
-
-footer a:hover {
-  opacity: 1;
-}
-
-/* ================================================
-   RESPONSIVE
-=================================================== */
-@media (max-width: 900px) {
-  .hero-inner {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .logo-flexblock {
-    width: 135px;
-  }
-
-  .logo-vivamo {
-    height: 24px;
-  }
-}
-
-@media (max-width: 600px) {
-  .topbar {
-    padding: 14px 16px;
-    flex-wrap: wrap;
-    row-gap: 12px;
-  }
-
-  .header-right {
-    width: 100%;
-    align-items: center;
-  }
-
-  .hero-copy h1 {
-    font-size: 40px;
-  }
-
-  .size-card {
-    width: 45%;
-  }
-
-  .color-swatch {
-    width: 60px;
-    height: 60px;
-  }
-}
-.verify-row {
+.verified-check{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 26px;
-  margin-top: 20px;
+
+  font-size: 26px;
+  font-weight: 800;
+  color: #0b0d10;
+
+  background: #22c55e;
+  box-shadow: 0 0 18px rgba(34,197,94,.55);
+  flex: 0 0 auto;
 }
 
-.verified-badge {
-  padding: 8px 16px;
-  background: #00e5ff15;
-  border: 1px solid #00e5ff55;
-  border-radius: 12px;
+.verified-copy{
+  min-width: 0;
+}
+
+.verified-title{
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.verified-sub{
+  margin-top: 6px;
+  font-size: 14px;               /* etwas größer, nicht “Knüppel” */
+  opacity: .75;
+  line-height: 1.35;
+}
+
+/* One-liner unten am Rand */
+.verified-hint{
+  margin-top: 10px;
   font-size: 14px;
-  font-weight: 600;
-  color: #00e5ff;
-  letter-spacing: 0.5px;
-  box-shadow: 0 0 14px #00e5ff30;
+  opacity: .7;
   white-space: nowrap;
 }
-/* ----------------------------------------------
-   HERO: BIG IMAGE WITH TOP FADE
----------------------------------------------- */
-.hero-media-edge {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
+
+/* Responsive */
+@media (max-width: 900px){
+  .verify-layout{
+    grid-template-columns: 1fr;
+  }
+  .preview-img{
+    width: 240px;
+  }
+  .verified-hint{
+    white-space: normal;
+  }
+}
+
+/* =========================================================
+   BLURRY LINES – Form UI (Inputs + Buttons)
+   (ans Ende der CSS-Datei)
+========================================================= */
+:root{
+  --flex-aqua: #00eaff; /* exakt wie Wallet-Display */
+}
+
+/* -------- Inputs / Selects -------- */
+.cinematic-verify .verify-input,
+#promo-section .verify-input,
+#shipping-section input,
+#shipping-section select,
+.container input,
+.container select{
+  background: rgba(10,12,16,0.55);
+  border: 1px solid rgba(0,234,255,0.28);
+  border-radius: 14px;
+  color: #eaeaea;
+
+  /* Größe wieder “definiert” */
+  min-height: 46px;
+  padding: 12px 14px;
+
+  /* Blurry Lines */
+  box-shadow:
+    0 0 0 1px rgba(0,234,255,0.10),
+    0 0 12px rgba(0,234,255,0.10),
+    0 0 22px rgba(0,234,255,0.06);
+
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.cinematic-verify .verify-input:hover,
+#promo-section .verify-input:hover,
+#shipping-section input:hover,
+#shipping-section select:hover{
+  border-color: rgba(0,234,255,0.40);
+  box-shadow:
+    0 0 0 1px rgba(0,234,255,0.16),
+    0 0 16px rgba(0,234,255,0.14),
+    0 0 28px rgba(0,234,255,0.08);
+}
+
+.cinematic-verify .verify-input:focus,
+#promo-section .verify-input:focus,
+#shipping-section input:focus,
+#shipping-section select:focus{
+  border-color: rgba(0,234,255,0.65);
+  box-shadow:
+    0 0 0 1px rgba(0,234,255,0.30),
+    0 0 18px rgba(0,234,255,0.22),
+    0 0 40px rgba(0,234,255,0.12);
+}
+
+/* -------- Buttons (zentrierter Text + blurry outline) -------- */
+.btn-gradient,
+.continue-checkout,
+.proceed-btn,
+.proceed-btn-side,
+.proceed-btn-2,
+.proceed-next{
   position: relative;
-  margin-top: -10px; /* zieht das Bild nah an den Header */
-  overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 46px;
+  line-height: 1;
+  text-align: center;
+
+  border: 1px solid rgba(0,234,255,0.32);
+  box-shadow:
+    0 0 0 1px rgba(0,234,255,0.10),
+    0 0 14px rgba(0,234,255,0.12),
+    0 0 28px rgba(0,234,255,0.08);
+
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-.hero-image-wrapper {
-  position: relative;
-  width: 520px;       /* großes Bild */
-  max-width: 100%;
+.btn-gradient:hover:not(:disabled),
+.continue-checkout:hover:not(:disabled),
+.proceed-btn:hover:not(:disabled),
+.proceed-btn-side:hover:not(:disabled),
+.proceed-btn-2:hover:not(:disabled),
+.proceed-next:hover:not(:disabled){
+  border-color: rgba(0,234,255,0.55);
+  box-shadow:
+    0 0 0 1px rgba(0,234,255,0.18),
+    0 0 18px rgba(0,234,255,0.18),
+    0 0 42px rgba(0,234,255,0.10);
+  transform: translateY(-1px);
 }
 
-.hero-edge-img {
+/* Optional: Disabled nicht so “hart” */
+.btn-gradient:disabled,
+.continue-checkout:disabled{
+  opacity: 0.45;
+  filter: grayscale(20%);
+}
+
+/* =========================================================
+   WALLET DEVICE PATCH — Statusfarben + Lauflicht
+   connected => aqua | disconnected => magenta
+========================================================= */
+
+/* 1) Button: Basis darf NICHT immer aqua glühen */
+.wallet-button{
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Status -> Button Farbe (egal was HardwareWalletButton intern setzt) */
+.wallet-device.connected .wallet-button{
+  background: rgba(0, 255, 255, 0.9) !important;
+  box-shadow:
+    0 0 12px rgba(0, 255, 255, 0.8),
+    0 0 20px rgba(0, 255, 255, 0.5) !important;
+  filter: blur(1.5px) !important;
+}
+
+.wallet-device.disconnected .wallet-button{
+  background: rgba(255, 0, 255, 0.9) !important;
+  box-shadow:
+    0 0 12px rgba(255, 0, 255, 0.8),
+    0 0 20px rgba(255, 0, 255, 0.5) !important;
+  filter: blur(1.5px) !important;
+}
+
+/* 2) LEDs: Lauflicht + Micro-Flicker */
+.wallet-leds.led-run .led{
+  opacity: .12;
+  will-change: opacity, filter;
+  animation-name: ledChase, ledFlicker;
+  animation-duration: var(--led-speed, 1.05s), 0.18s;
+  animation-timing-function: steps(1, end), steps(2, end);
+  animation-iteration-count: infinite, infinite;
+  animation-delay: var(--phase, 0s), var(--flickerPhase, 0s);
+}
+
+.wallet-leds.led-run .led-1{ --phase: 0s;    --flickerPhase: 0.01s; }
+.wallet-leds.led-run .led-2{ --phase: 0.24s; --flickerPhase: 0.04s; }
+.wallet-leds.led-run .led-3{ --phase: 0.48s; --flickerPhase: 0.02s; }
+.wallet-leds.led-run .led-4{ --phase: 0.72s; --flickerPhase: 0.06s; }
+
+@keyframes ledChase{
+  0%   { opacity: .12; filter: blur(2px) brightness(0.9); }
+  10%  { opacity: 1;   filter: blur(2px) brightness(1.6); }
+  35%  { opacity: 1;   filter: blur(2px) brightness(1.6); }
+  36%  { opacity: .12; filter: blur(2px) brightness(0.9); }
+  100% { opacity: .12; filter: blur(2px) brightness(0.9); }
+}
+
+@keyframes ledFlicker{
+  0%   { opacity: 1; }
+  50%  { opacity: .65; }
+  100% { opacity: 1; }
+}
+
+/* disconnected: schneller/“nervöser” */
+.wallet-leds.led-run.led-hyper{ --led-speed: 0.65s; }
+/* =========================================================
+   FIX: Shipping/Form-Grid nicht nach rechts schieben
+========================================================= */
+
+.form-grid{
+  /* kill right-push */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  justify-content: stretch !important;
+  justify-items: stretch !important;
+  place-items: stretch !important;
+
+  /* sane layout */
   width: 100%;
-  border-radius: 16px;
-  display: block;
+  max-width: 760px;         /* nach Geschmack */
+  margin: 22px auto 0;      /* zentriert im Card */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
 }
 
-/* Top fade-black overlay */
-.hero-image-fade {
-  position: absolute;
-  top: 0;
-  left: 0;
+.form-grid input{
   width: 100%;
-  height: 120px;
-  background: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
-  border-radius: 16px 16px 0 0;
-  pointer-events: none;
-}
-
-/* LARGE SCREENS */
-@media (min-width: 1400px) {
-  .hero-image-wrapper {
-    width: 650px;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 900px) {
-  .hero-media-edge {
-    justify-content: center;
-    margin-top: 0;
-  }
-
-  .hero-image-wrapper {
-    width: 90%;
-  }
-}
-/* ======================================================
-   FILMSTRIP – Endlos Galerie
-====================================================== */
-.filmstrip {
-  width: 100%;
-  overflow: hidden;
-  background: #0a0a0a;
-  margin-top: -10px;
-  padding: 0;
-}
-
-/* horizontales Laufband */
-.filmstrip-track {
-  display: flex;
-  gap: 0;
-  height: 180px;
-  flex-wrap: nowrap;
-  animation: stripScroll 35s linear infinite;
-}
-
-/* Bilder */
-.filmstrip img {
-  height: 100%;
-  width: auto;
-  object-fit: cover;
-  flex-shrink: 0;
-  opacity: 0.95;
-  filter: brightness(0.9);
-  transition: .3s ease;
-}
-
-/* Hover Effekt */
-.filmstrip img:hover {
-  opacity: 1;
-  filter: brightness(1);
-}
-
-/* Loop Animation */
-@keyframes stripScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-/* mobile */
-@media(max-width:900px){
-  .filmstrip-track {
-    height: 120px;
-    animation-duration: 25s;
-  }
+  min-width: 0;
+  justify-self: stretch !important;
 }

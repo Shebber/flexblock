@@ -1,45 +1,68 @@
-import '../styles.css';
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { metaMask, walletConnect } from 'wagmi/connectors';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { apechain } from '../utils/chain';
-import { createPublicClient } from 'viem';
+import "../styles.css";
 
-const queryClient = new QueryClient();
+// Wichtig: In Pages Router brauchst du normalerweise kein "use client" ganz oben, 
+// aber es schadet auch nicht.
+
+import { SessionProvider } from "next-auth/react";
+// 🟢 KORREKTUR: WagmiProvider statt WagmiConfig (für Wagmi v2)
+import { WagmiProvider, createConfig, http } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { walletConnect, injected } from "wagmi/connectors";
+import { base } from "wagmi/chains"; 
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
+// ⭐ Wagmi-Config: Nur BASE Mainnet (erzwingt Network Switch beim Bezahlen)
 const config = createConfig({
-  chains: [apechain],
+  chains: [base],
+  transports: {
+    [base.id]: http("https://mainnet.base.org"), // oder dein eigener RPC falls vorhanden
+  },
+  // 🟢 TIPP: ssr: true ist meist besser für Next.js, um Hydration Errors zu vermeiden.
+  // Wenn du ssr: false lässt, flackert es kurz beim Laden.
+  ssr: true, 
+  
   connectors: [
-    metaMask({ shimDisconnect: true }),
+    injected({ shimDisconnect: true }), // MetaMask & co.
+
     walletConnect({
       projectId,
+      showQrModal: true,
       metadata: {
-        name: 'Flexblock',
-        description: 'NFT → Acrylic Print Shop',
-        url: 'https://flexblock.xyz',
-        icons: [],
+        name: "Flexblock",
+        description: "Flexblock Production Checkout",
+        url: "https://flexblock-shop.vercel.app", // Deine Domain
+        icons: ["https://flexblock-shop.vercel.app/logo.png"],
+      },
+      qrModalOptions: {
+        themeMode: "dark",
+        // Deine Whitelist ist gut, das hält das Modal sauber
+        explorerExcludedWalletIds: "ALL",
+        recommendedWalletIds: [
+          "c38b2ae4-4d8d-4b90-9f3d-92f764f4bfe1", // MetaMask
+          "bb6ca25e-0e5c-4d93-8bf2-ca0d44e551e3", // Coinbase
+          "8e6cdf6b-6d49-4b88-9d69-c17e13780a3d", // Ledger
+          "1ee8cf77-3e7c-4f70-b2f0-fc50f0e29fa4", // Rabby
+          "a4e0f39c-e69e-4029-8d28-f27e1bbd4412", // OKX
+          "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa", // Coinbase Wallet (Mobile App)
+        ],
       },
     }),
   ],
-  transports: {
-    [apechain.id]: http(apechain.rpcUrls.default.http[0]),
-  },
-  ssr: false,
 });
 
-// ⭐ CRUCIAL for debugging & wallet buttons
-if (typeof window !== 'undefined') {
-  window.wagmiConfig = config;
-}
+const queryClient = new QueryClient();
 
 export default function App({ Component, pageProps }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
-      </QueryClientProvider>
-    </WagmiProvider>
+    <SessionProvider session={pageProps.session}>
+      {/* 🟢 Reihenfolge: WagmiProvider außen, QueryClient innen (Standard v2 Setup) */}
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <Component {...pageProps} />
+        </QueryClientProvider>
+      </WagmiProvider>
+    </SessionProvider>
   );
 }

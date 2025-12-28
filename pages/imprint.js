@@ -1,32 +1,64 @@
+import LegalPage from "../components/LegalPage";
+
 export default function Imprint() {
   return (
-    <div style={{
-      maxWidth: '820px',
-      margin: '80px auto',
-      padding: '0 24px 80px',
-      lineHeight: 1.6,
-      color: '#eaeaea',
-      fontFamily: 'ui-sans-serif, system-ui',
-    }}>
-      <h1 style={{
-        fontSize: '38px',
-        marginBottom: '20px',
-        letterSpacing: '-0.5px',
-      }}>Imprint</h1>
+    <LegalPage title="Imprint">
 
-      <p style={{ opacity: 0.8 }}>
-        This page contains the legally required imprint information for Flexblock by Vivamo GmbH.
-      </p>
+      <p>
+Legal notice<br />
 
-      <hr style={{ margin: '30px 0', borderColor: '#222' }} />
 
-      <p><strong>Company:</strong><br />Vivamo GmbH</p>
-      <p><strong>Address:</strong><br />Herner Str.299, 44809 Bochum, Germany</p>
-      <p><strong>Contact:</strong><br />seb@vivamo.de</p>
+Information pursuant to § 5 TMG:<br />
 
-      <p style={{ marginTop: 40, opacity: 0.7 }}>
-        For any legal inquiries, please contact us via the email above.
-      </p>
-    </div>
+
+Vivamo GmbH<br />
+
+Herner Straße 299 | B29<br />
+
+44809 Bochum, Germany<br />
+
+
+Represented by:<br />
+
+Managing Director: Volker Brunswick<br />
+
+<br />
+Contact:<br />
+
+Phone: +49 (0) 234 911799 0<br />
+
+Email: support@nftflexblock.xyz<br />
+
+<br />
+
+Register court: Bochum Local Court<br />
+
+Register number: HRB 10 984<br />
+
+<br />
+
+Sales tax ID:<br />
+
+Sales tax identification number pursuant to §27 a Sales Tax Act:<br />
+DE 81 47 47 856
+<br />
+<br />
+
+Disclaimer<br />
+
+<br />
+
+Liability for content
+As a service provider, we are responsible for our own content on these pages in accordance with § 7 para. 1 TMG (German Telemedia Act) and general laws. However, according to §§ 8 to 10 TMG, we are not obliged as a service provider to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity. Obligations to remove or block the use of information in accordance with general laws remain unaffected by this. However, liability in this regard is only possible from the time we become aware of a specific legal violation. If we become aware of such legal violations, we will remove this content immediately.
+<br />
+
+Copyright<br />
+
+<br />
+
+The content and works on these pages created by the site operators are subject to German copyright law. The reproduction, editing, distribution, and any kind of use outside the limits of copyright law require the written consent of the respective author or creator. Downloads and copies of this site are only permitted for private, non-commercial use. Insofar as the content on this site was not created by the operator, the copyrights of third parties are respected. In particular, third-party content is identified as such. Should you nevertheless become aware of a copyright infringement, please inform us accordingly. If we become aware of any infringements, we will remove such content immediately.<br />
+
+</p>
+    </LegalPage>
   );
 }
