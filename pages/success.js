@@ -84,8 +84,8 @@ export default function SuccessPage() {
         </div>
 
         <div style={styles.kv}>
-          <span style={styles.k}>APE Amount</span>
-          <span>{order.apeAmount?.toString()}</span>
+          <span style={styles.k}>ETH Amount</span>
+          <span>{order.ethAmount?.toString()}</span>
         </div>
 
         <div style={styles.kv}>

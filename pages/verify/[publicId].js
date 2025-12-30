@@ -76,7 +76,7 @@ export default function VerifyPage({ found, order, publicId }) {
 
           <p className="verify-p"><strong>Order ID:</strong> {order.orderId}</p>
           <p className="verify-p"><strong>Placed:</strong> {new Date(order.createdAt).toLocaleString()}</p>
-          <p className="verify-p"><strong>APE Paid:</strong> {order.apeAmount?.toString?.() ?? String(order.apeAmount)}</p>
+          <p className="verify-p"><strong>ETH Paid:</strong> {order.ethAmount?.toString?.() ?? String(order.ethAmount)}</p>
           <p className="verify-p"><strong>Backplate:</strong> {order.backplate}</p>
           <p className="verify-p"><strong>Wallet:</strong> {order.wallet}</p>
 

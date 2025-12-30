@@ -131,8 +131,8 @@ export default function OrdersPage({ orders }) {
 
                 {/* Payment */}
                 <h3 style={styles.subhead}>Zahlung</h3>
-                <p>Ape Amount: {o.apeAmount}</p>
-                <p>Ape Price: {o.apePrice}</p>
+                <p>ETH Amount: {o.ethAmount}</p>
+                <p>ETH Price: {o.ethPrice}</p>
                 {o.txHash && (
                   <p>
                     <a

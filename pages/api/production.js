@@ -47,17 +47,29 @@ export default async function handler(req, res) {
 
     if (!orderId) return res.status(400).json({ error: "Missing orderId" });
 
-    // --------------------------------------------------
-    // 1) ORDER LADEN
-    // --------------------------------------------------
-    const order = await prisma.order.findUnique({
-      where: { orderId: String(orderId) },
-    });
+  // --------------------------------------------------
+// 1) ORDER LADEN
+// --------------------------------------------------
+const order = await prisma.order.findUnique({
+  where: { orderId: String(orderId) },
+});
 
-    if (!order) {
-      console.error("❌ ORDER NOT FOUND:", orderId);
-      return res.status(404).json({ error: "Order not found" });
-    }
+if (!order) {
+  console.error("❌ ORDER NOT FOUND:", orderId);
+  return res.status(404).json({ error: "Order not found" });
+}
+
+// ✅ Wallet für Mint: bevorzugt aus Request, sonst aus DB-Order
+const mintTo = wallet || order.wallet;
+if (!mintTo) {
+  console.warn("⚠ Mint wallet missing (req.wallet + order.wallet empty). Mint will be skipped.");
+}
+
+// ✅ finalPriceEUR absichern (kein NaN in Prisma schreiben)
+const finalEur = Number(finalPriceEUR);
+const finalEurSafe = Number.isFinite(finalEur)
+  ? Math.round(finalEur)
+  : order.finalPriceEUR;
 
     // --------------------------------------------------
     // 2) NFT IMAGE DOWNLOAD
@@ -208,65 +220,63 @@ ${verifyUrl}
       }
     }
 
+// --------------------------------------------------
+// 5) ORDER UPDATE (PAID)
+// --------------------------------------------------
+await prisma.order.update({
+  where: { orderId: String(orderId) },
+  data: {
+    status: "paid",
+    txHash,
+    ethAmount: amountEth?.toString() || null,
+    ethPrice: ethPrice?.toString() || null,
+    wallet: mintTo || wallet, // optional, falls du's persistieren willst
+    backplate,
+    backplateCode,
+    promo: promo || false,
+    promoCode: promoCode || null,
+    promoDiscount: promoDiscount ?? 0,
+    finalPriceEUR: finalEurSafe,
+    promoPickup: promoPickup || false,
+    shipName: shipping?.name || "",
+    shipStreet: shipping?.street || null,
+    shipZip: shipping?.zip || null,
+    shipCity: shipping?.city || null,
+    shipCountry: shipping?.country || null,
+    localImagePath,
+    convertedCloudPath: cloudImagePath || null,
+    verifyUrl,
+    wrikeTaskId,
+  },
+});
+
     // --------------------------------------------------
-    // 5) ORDER UPDATE (PAID)
-    // --------------------------------------------------
-    await prisma.order.update({
-      where: { orderId },
-      data: {
-        status: "paid",
-        txHash,
-        apeAmount: amountEth?.toString() || null,
-        apePrice: ethPrice?.toString() || null,
-        wallet,
-        backplate,
-        backplateCode,
-        promo: promo || false,
-        promoCode: promoCode || null,
-        promoDiscount: promoDiscount ?? 0,
-        finalPriceEUR: Math.round(Number(finalPriceEUR)),
-        promoPickup: promoPickup || false,
-        shipName: shipping?.name || "",
-        shipStreet: shipping?.street || null,
-        shipZip: shipping?.zip || null,
-        shipCity: shipping?.city || null,
-        shipCountry: shipping?.country || null,
-        
-        localImagePath, // Zeigt auf _print_320mm.jpg
-        convertedCloudPath: cloudImagePath || null,
-        verifyUrl,
-        wrikeTaskId,
-      },
+// 6) FLEXPASS MINT
+// --------------------------------------------------
+if (!mintTo) {
+  console.warn("⚠ Mint skipped: no wallet in request or order");
+} else {
+  try {
+    console.log("🪙 Minting Flexblock Production Pass…");
+
+    const mintResult = await mintFlexPass({
+      to: mintTo,
+      orderId,
     });
 
-    // --------------------------------------------------
-    // 6) FLEXPASS MINT
-    // --------------------------------------------------
-    if (wallet) {
-      try {
-        console.log("🪙 Minting Flexblock Production Pass…");
-        
-        const mintResult = await mintFlexPass({
-          to: wallet,
-          orderId,
-        });
-
-        if (mintResult.ok) {
-          // Zweites Update nur für den Token
-          await prisma.order.update({
-            where: { orderId },
-            data: {
-              flexPassTokenId: mintResult.tokenId,
-            },
-          });
-          console.log("✔ FlexPass minted:", mintResult.tokenId);
-        } else {
-          console.warn("⚠ FlexPass mint failed:", mintResult.error);
-        }
-      } catch (err) {
-        console.error("❌ FLEXPASS MINT ERROR:", err);
-      }
+    if (mintResult.ok) {
+      await prisma.order.update({
+        where: { orderId: String(orderId) },
+        data: { flexPassTokenId: mintResult.tokenId },
+      });
+      console.log("✔ FlexPass minted:", mintResult.tokenId);
+    } else {
+      console.warn("⚠ FlexPass mint failed:", mintResult.error);
     }
+  } catch (err) {
+    console.error("❌ FLEXPASS MINT ERROR:", err);
+  }
+}
 
     console.log("✔ PRODUCTION COMPLETE:", orderId);
 

@@ -74,7 +74,7 @@ Customer verifies NFT ownership<br />
 Customer provides shipping details<br />
 
 
-Customer pays using the supported cryptocurrency (APE)<br />
+Customer pays using the supported cryptocurrency (ETH)<br />
 
 
 After payment, the order enters production.<br />
@@ -86,7 +86,7 @@ A tracking link will be provided once the product ships.<br />
 
 
 
-All prices are displayed in APE and updated dynamically based on the current EUR/APE exchange rate.<br />
+All prices are displayed in ETH and updated dynamically based on the current EUR/ETH exchange rate.<br />
 
 Payment is processed through blockchain transactions.<br />
 
