@@ -682,7 +682,7 @@ return (
           </a>
 
           <a
-            href="https://instagram.com/nftflexblock"
+            href="https://instagram.com/nft_flexblock"
             target="_blank"
             rel="noopener noreferrer"
           >
