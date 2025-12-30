@@ -16,3 +16,12 @@ out
 
 # --- macOS ---
 .DS_Store
+prisma/dev.db
+
+# --- Flexblock local production artifacts ---
+public/production/*
+!public/production/.gitkeep
+
+# --- Local helpers (optional, wenn du sie nicht deployen willst) ---
+get-refresh-token.js
+data/backplateColors.json.backup
