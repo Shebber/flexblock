@@ -101,11 +101,7 @@ model Order {
 
   wrikeTaskId   String?
 
-
-
 }
-
-
 
 model TreasuryAdjustment {
   id          Int      @id @default(autoincrement())
@@ -116,3 +112,15 @@ model TreasuryAdjustment {
   reason      String
   changedBy   String   // <- Email des eingeloggten Users
 }
+
+model BackplateColor {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  hex       String
+  enabled   Boolean  @default(true)
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

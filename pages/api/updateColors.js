@@ -1,7 +1,6 @@
-import fs from "fs";
-import path from "path";
+import prisma from "../../lib/prisma";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -13,23 +12,23 @@ export default function handler(req, res) {
       return res.status(400).json({ error: "Invalid colors array" });
     }
 
-    const filePath = path.join(process.cwd(), "data", "backplateColors.json");
+    const clean = colors.map((c, i) => ({
+      name: String(c.name || ""),
+      code: String(c.code || `CODE_${i}`),
+      hex: String(c.hex || "#000000"),
+      enabled: !!c.enabled,
+      sort: i,
+    }));
 
-    // SHOP-KOMPATIBLES FORMAT SICHERN:
-    const fileContent = JSON.stringify({ colors }, null, 2);
+    // Replace-all (einfach & robust)
+    await prisma.$transaction([
+      prisma.backplateColor.deleteMany({}),
+      prisma.backplateColor.createMany({ data: clean }),
+    ]);
 
-    // optional: Backup anlegen (empfohlen)
-    fs.writeFileSync(
-      filePath + ".backup",
-      fs.readFileSync(filePath, "utf8"),
-      "utf8"
-    );
-
-    fs.writeFileSync(filePath, fileContent, "utf8");
-
-    res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("ERROR saving colors:", err);
-    res.status(500).json({ error: "Could not save colors." });
+    return res.status(500).json({ error: "Could not save colors." });
   }
 }

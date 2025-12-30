@@ -33,12 +33,22 @@ const dashboardAuth = withAuth({
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  if (path.startsWith("/dashboard")) return dashboardAuth(req);
-  if (path.startsWith("/orders") || path.startsWith("/color-admin")) return basicAuth(req);
+if (
+  path.startsWith("/orders") ||
+  path.startsWith("/color-admin") ||
+  path.startsWith("/admin") ||
+  path.startsWith("/api/updateColors")
+) return basicAuth(req);
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/orders/:path*", "/color-admin/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/orders/:path*",
+    "/color-admin/:path*",
+    "/admin/:path*",
+    "/api/updateColors",
+  ],
 };
