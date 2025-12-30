@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
 
 import VivamoBanner from "../components/VivamoBanner";
@@ -14,6 +14,7 @@ import { generateOrderId } from "../utils/orderId";
 export default function Checkout() {
   const [data, setData] = useState(null);
   const { ethPrice } = useEthPrice();
+  const lastInitSig = useRef("");
 
   // 1. Daten aus LocalStorage laden
   useEffect(() => {
@@ -41,33 +42,83 @@ export default function Checkout() {
     setData(newOrder);
   }, []);
 
-  // 2. Order Init API
-  useEffect(() => {
-    if (!data) return;
-    async function init() {
-      await fetch("/api/order/init", {
+// 2) Order Init API (Server ist Preis-Wahrheit)
+useEffect(() => {
+  if (!data?.orderId) return;
+
+  // Signatur, wann wir neu init'en müssen (z.B. neuer promoCode)
+  const sig = [
+    data.orderId,
+    data.wallet || "",
+    data.backplate || "",
+    data.backplateCode || "",
+    data.contract || "",
+    data.tokenId || "",
+    (data.promoCode || "").trim().toUpperCase(),
+    JSON.stringify(data.shipping || {}),
+  ].join("|");
+
+  if (lastInitSig.current === sig) return;
+
+  async function init() {
+    try {
+      const res = await fetch("/api/order/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: data.orderId,
           wallet: data.wallet,
           backplate: data.backplate,
+          backplateCode: data.backplateCode || null,
           nft: {
             contract: data.contract,
             tokenId: data.tokenId,
             image: data.nftImage,
           },
           shipping: data.shipping,
-          promo: data.promo || null,
+          // ✅ nur noch der Code – Preis berechnet der Server
           promoCode: data.promoCode || null,
-          promoDiscount: data.promoDiscount || null,
-          finalPriceEUR: data.finalPriceEUR,
-          promoPickup: data.shipping?.pickup || false,
         }),
       });
+
+      const json = await res.json().catch(() => null);
+
+      // Init gilt als erledigt für diese Signatur
+      lastInitSig.current = sig;
+
+      // ✅ pricing aus Response übernehmen (Server-Wahrheit)
+      if (json?.pricing) {
+        const merged = {
+          ...data,
+          ...json.pricing,          // promo, promoCode, promoDiscount, promoPickup, finalPriceEUR
+          publicId: json.publicId || data.publicId,
+          verifyUrl: json.verifyUrl || data.verifyUrl,
+        };
+
+        const changed =
+          merged.finalPriceEUR !== data.finalPriceEUR ||
+          merged.promo !== data.promo ||
+          merged.promoCode !== data.promoCode ||
+          merged.promoDiscount !== data.promoDiscount ||
+          merged.promoPickup !== data.promoPickup ||
+          merged.publicId !== data.publicId ||
+          merged.verifyUrl !== data.verifyUrl;
+
+        if (changed) {
+          localStorage.setItem("flex_checkout", JSON.stringify(merged));
+          setData(merged);
+        }
+      }
+    } catch (e) {
+      // wenn init fehlschlägt, erlauben wir einen Retry
+      lastInitSig.current = "";
+      console.error("❌ /api/order/init failed:", e);
     }
-    init();
-  }, [data]);
+  }
+
+  init();
+}, [data]);
+
 
   // 3. Marquee
   useEffect(() => {
@@ -160,32 +211,37 @@ export default function Checkout() {
         <div className="payment-card">
           <h3>Order Summary</h3>
 
-          {/* Promo */}
-          {data.promo && (
-            <div className="summary-line" style={{ color: "#5eead4" }}>
-              <span>Discount ({data.promoCode})</span>
-              <span>- {data.promoDiscount} €</span>
-            </div>
-          )}
+         {/* Promo / Pickup display */}
+{data.promo && data.promoCode && (
+  <div className="summary-line" style={{ color: "#5eead4" }}>
+    <span>
+      {data.promoPickup ? `Pickup price (${data.promoCode})` : `Promo (${data.promoCode})`}
+    </span>
+    <span>{data.promoPickup ? "Fixed price applied" : "Applied"}</span>
+  </div>
+)}
+
+{/* Discount only if > 0 */}
+{Number(data.promoDiscount || 0) > 0 && (
+  <div className="summary-line" style={{ color: "#5eead4" }}>
+    <span>Discount</span>
+    <span>- {data.promoDiscount} €</span>
+  </div>
+)}
+
 
           {/* Total */}
           <div className="summary-line">
-            <span>Total</span>
-            <span>{data.finalPriceEUR} €</span>
+          <span>Total</span>
+          <span>{ethToPay ? `${ethToPay} ETH` : "…"}</span>
           </div>
-
           <div className="divider"></div>
 
-          {/* ETH rate */}
-          <div className="ape-price-box">
-            <span>ETH rate:</span>
-            <strong>{ethPrice?.toFixed(2)} €</strong>
-          </div>
+         
 
           {/* Amount to pay */}
           <div className="ape-price-box">
-            <span>You pay:</span>
-            <strong>{ethToPay} ETH</strong>
+            
           </div>
 
           {/* Payment Button */}

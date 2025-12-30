@@ -1,4 +1,4 @@
-
+import { ethers } from "ethers";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
 import fs from "fs";
@@ -7,7 +7,6 @@ import fs from "fs";
 import { createWrikeTask } from "../../lib/wrike";
 import { uploadToOneDrive } from "../../lib/onedrive";
 import { mintFlexPass } from "../../lib/flexpass";
-// 🟢 NEU: Die Image-Processing Funktion
 import { normalizeFlexblockImage } from "../../lib/image";
 
 const prisma = new PrismaClient();
@@ -21,9 +20,7 @@ function wrikeSafe(input = "") {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   try {
     console.log("📥 HIT /api/production");
@@ -33,48 +30,188 @@ export default async function handler(req, res) {
       txHash,
       amountEth,
       ethPrice,
-      wallet,
-      backplate,
-      backplateCode,
-      promo,
-      promoCode,
-      promoDiscount,
-      finalPriceEUR,
-      promoPickup,
-      nft,
-      shipping,
-    } = req.body;
+      wallet,          // optional fallback
+      backplate,       // optional fallback
+      backplateCode,   // optional fallback
+      nft,             // optional fallback
+      shipping,        // optional fallback
+    } = req.body || {};
 
     if (!orderId) return res.status(400).json({ error: "Missing orderId" });
 
-  // --------------------------------------------------
-// 1) ORDER LADEN
+    // --------------------------------------------------
+    // 1) ORDER LADEN (DB = Wahrheit)
+    // --------------------------------------------------
+    const order = await prisma.order.findUnique({
+      where: { orderId: String(orderId) },
+    });
+
+    if (!order) {
+      console.error("❌ ORDER NOT FOUND:", orderId);
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+
+if (order.status === "paid" && order.txHash === txHash) {
+  return res.status(200).json({ ok: true, orderId, verifyUrl: order.verifyUrl, message: "Already processed" });
+}
+
+    // ✅ Wallet für Mint: bevorzugt DB, fallback Request
+    const mintTo = order.wallet || wallet;
+    if (!mintTo) {
+      console.warn("⚠ Mint wallet missing (order.wallet + req.wallet empty). Mint will be skipped.");
+    }
 // --------------------------------------------------
-const order = await prisma.order.findUnique({
-  where: { orderId: String(orderId) },
+// ✅ 1b) TX CHECK (Base payment validation)
+// --------------------------------------------------
+const BASE_RPC = process.env.BASE_RPC_URL || process.env.PAYMENT_RPC_URL || process.env.RPC_URL;
+const RECIPIENT_RAW =
+  process.env.NEXT_PUBLIC_RECIPIENT_ADDRESS || process.env.RECIPIENT_ADDRESS;
+
+if (!txHash) {
+  return res.status(400).json({ error: "Missing txHash" });
+}
+if (!BASE_RPC) {
+  return res.status(500).json({ error: "Missing BASE_RPC_URL (or PAYMENT_RPC_URL)" });
+}
+if (!RECIPIENT_RAW) {
+  return res.status(500).json({ error: "Missing NEXT_PUBLIC_RECIPIENT_ADDRESS (or RECIPIENT_ADDRESS)" });
+}
+
+// helper: normalize addresses
+const norm = (a) => {
+  try {
+    return ethers.getAddress(String(a));
+  } catch {
+    return null;
+  }
+};
+
+const recipient = norm(RECIPIENT_RAW);
+if (!recipient) {
+  return res.status(500).json({ error: "Recipient address invalid" });
+}
+
+// Buyer = DB-Wallet (Truth), fallback request wallet
+const buyer = norm(order.wallet || wallet);
+if (!buyer) {
+  return res.status(400).json({ error: "Missing buyer wallet (order.wallet empty)" });
+}
+
+// amountEth muss vom Checkout kommen
+let expectedWei = null;
+try {
+  expectedWei = ethers.parseEther(String(amountEth));
+} catch {
+  return res.status(400).json({ error: "Invalid amountEth" });
+}
+
+const provider = new ethers.JsonRpcProvider(BASE_RPC);
+
+// Chain check
+const net = await provider.getNetwork();
+if (Number(net.chainId) !== 8453) {
+  return res.status(400).json({
+    error: "Wrong chain for payment",
+    expectedChainId: 8453,
+    gotChainId: Number(net.chainId),
+  });
+}
+
+// Load tx + receipt
+const tx = await provider.getTransaction(String(txHash));
+if (!tx) {
+  return res.status(400).json({ error: "Transaction not found on Base", txHash });
+}
+
+const receipt = await provider.getTransactionReceipt(String(txHash));
+if (!receipt) {
+  return res.status(400).json({ error: "Transaction receipt not found yet", txHash });
+}
+if (receipt.status !== 1) {
+  return res.status(400).json({ error: "Transaction failed", txHash });
+}
+
+// Validate to/from/value
+const txTo = norm(tx.to);
+const txFrom = norm(tx.from);
+
+if (!txTo || txTo !== recipient) {
+  return res.status(400).json({
+    error: "Payment recipient mismatch",
+    expectedTo: recipient,
+    gotTo: tx.to || null,
+  });
+}
+
+if (!txFrom || txFrom !== buyer) {
+  return res.status(400).json({
+    error: "Payment sender mismatch",
+    expectedFrom: buyer,
+    gotFrom: tx.from || null,
+  });
+}
+
+const paidWei = tx.value; // bigint (ethers v6)
+if (paidWei < expectedWei) {
+  return res.status(400).json({
+    error: "Underpaid",
+    expectedWei: expectedWei.toString(),
+    paidWei: paidWei.toString(),
+  });
+}
+
+// Prevent tx reuse across orders
+const alreadyUsed = await prisma.order.findFirst({
+  where: {
+    txHash: String(txHash),
+    NOT: { orderId: String(orderId) },
+  },
 });
 
-if (!order) {
-  console.error("❌ ORDER NOT FOUND:", orderId);
-  return res.status(404).json({ error: "Order not found" });
+if (alreadyUsed) {
+  return res.status(400).json({
+    error: "txHash already used by another order",
+    txHash,
+  });
 }
 
-// ✅ Wallet für Mint: bevorzugt aus Request, sonst aus DB-Order
-const mintTo = wallet || order.wallet;
-if (!mintTo) {
-  console.warn("⚠ Mint wallet missing (req.wallet + order.wallet empty). Mint will be skipped.");
-}
+console.log("✅ TX CHECK OK:", {
+  orderId,
+  txHash,
+  buyer,
+  recipient,
+  paidWei: paidWei.toString(),
+});
 
-// ✅ finalPriceEUR absichern (kein NaN in Prisma schreiben)
-const finalEur = Number(finalPriceEUR);
-const finalEurSafe = Number.isFinite(finalEur)
-  ? Math.round(finalEur)
-  : order.finalPriceEUR;
+    // ✅ Backplate/Shipping/NFT primär aus DB
+    const effectiveBackplate = order.backplate || backplate || null;
+    const effectiveBackplateCode = order.backplateCode || backplateCode || null;
+
+    const effectiveShipping = {
+      name: order.shipName || shipping?.name || "",
+      street: order.shipStreet ?? shipping?.street ?? null,
+      zip: order.shipZip ?? shipping?.zip ?? null,
+      city: order.shipCity ?? shipping?.city ?? null,
+      country: order.shipCountry ?? shipping?.country ?? null,
+    };
+
+    const effectiveNft = {
+      contract: order.nftContract || nft?.contract || "",
+      tokenId: order.nftTokenId ?? Number(nft?.tokenId || 0),
+      image: order.nftImage || nft?.image || null,
+    };
+
+    // Promo/Preis NUR aus DB
+    const promoPickup = !!order.promoPickup;
+    const promoCodeDb = order.promoCode || null;
+    const promoDiscountDb = order.promoDiscount ?? 0;
+    const finalPriceDb = order.finalPriceEUR; // bleibt DB-Wahrheit
 
     // --------------------------------------------------
-    // 2) NFT IMAGE DOWNLOAD
+    // 2) NFT IMAGE DOWNLOAD (nur DB/effektive URL)
     // --------------------------------------------------
-    const imageUrl = nft?.image;
+    const imageUrl = effectiveNft.image;
     let localImagePath = null;     // DB Pfad (Vorschau)
     let absoluteImagePath = null;  // Dateisystem Pfad (Original)
     let fileName = null;           // Original Name
@@ -87,7 +224,7 @@ const finalEurSafe = Number.isFinite(finalEur)
     if (imageUrl) {
       try {
         console.log("⬇ Downloading Image:", imageUrl);
-        const safeName = orderId.replace(/[^a-zA-Z0-9]/g, "");
+        const safeName = String(orderId).replace(/[^a-zA-Z0-9]/g, "");
         fileName = `${safeName}.jpg`;
         const filePath = path.join(baseDir, fileName);
 
@@ -101,15 +238,15 @@ const finalEurSafe = Number.isFinite(finalEur)
         localImagePath = isVercel ? null : `/production/${fileName}`;
         console.log("✅ Image saved locally:", filePath);
       } catch (err) {
-        console.error("❌ IMAGE DOWNLOAD FAILED:", err.message);
+        console.error("❌ IMAGE DOWNLOAD FAILED:", err.message || err);
       }
+    } else {
+      console.warn("⚠ No NFT image URL found (order.nftImage empty). Skipping image pipeline.");
     }
 
     // --------------------------------------------------
     // 2b) IMAGE NORMALIZATION (320x320mm Canvas / 100dpi)
     // --------------------------------------------------
-    
-    // Standard: Wir nehmen das Original, falls Normalisierung fehlschlägt
     let finalPath = absoluteImagePath;
     let finalFileName = fileName;
 
@@ -117,33 +254,24 @@ const finalEurSafe = Number.isFinite(finalEur)
       try {
         console.log("🧩 Normalizing image for Flexblock production…");
 
-        // Neuer Name: ORDERID_print_320mm.jpg
         const normalizedName = fileName.replace(".jpg", "_print_320mm.jpg");
         const normalizedPath = path.join(baseDir, normalizedName);
 
-        // Aufruf deiner lib/image.js Funktion (100dpi, 320mm canvas, 305mm image, blur)
-        await normalizeFlexblockImage(
-          absoluteImagePath,
-          normalizedPath
-        );
+        await normalizeFlexblockImage(absoluteImagePath, normalizedPath);
 
-        // 🟢 SWAP: Erfolg! Ab jetzt nutzen wir das bearbeitete Bild
         finalPath = normalizedPath;
         finalFileName = normalizedName;
 
-        // DB Update: Wir speichern den Pfad zum bearbeiteten Bild als Vorschau
         localImagePath = isVercel ? null : `/production/${normalizedName}`;
 
         console.log("✔ Image normalized:", normalizedPath);
-
       } catch (err) {
         console.error("❌ IMAGE NORMALIZATION FAILED:", err);
-        // Fallback: finalPath bleibt das Original
       }
     }
 
     // --------------------------------------------------
-    // 3) ONEDRIVE UPLOAD (Mit finalPath & finalFileName)
+    // 3) ONEDRIVE UPLOAD (finalPath)
     // --------------------------------------------------
     let cloudImagePath = null;
 
@@ -151,11 +279,7 @@ const finalEurSafe = Number.isFinite(finalEur)
       try {
         console.log(`☁ Uploading to OneDrive: ${finalFileName}`);
 
-        // 🟢 WICHTIG: Hier nutzen wir jetzt finalPath (das bearbeitete Bild)
-        const uploadResult = await uploadToOneDrive(
-          finalPath,
-          finalFileName
-        );
+        const uploadResult = await uploadToOneDrive(finalPath, finalFileName);
 
         if (uploadResult.ok && uploadResult.webUrl) {
           cloudImagePath = uploadResult.webUrl;
@@ -190,18 +314,21 @@ Preview (Local):
 ${localImagePath || "No local preview"}
 
 NFT:
-Contract: ${nft?.contract || "-"}
-Token: ${nft?.tokenId || "-"}
+Contract: ${effectiveNft.contract || "-"}
+Token: ${effectiveNft.tokenId || "-"}
 
 Backplate:
-${backplateCode || backplate || "-"}
+${effectiveBackplateCode || effectiveBackplate || "-"}
 
 Shipping:
-${shipping?.name || ""}
-${shipping?.street || ""}
-${shipping?.zip || ""} ${shipping?.city || ""}
-${shipping?.country || ""}
+${effectiveShipping.name || ""}
+${effectiveShipping.street || ""}
+${effectiveShipping.zip || ""} ${effectiveShipping.city || ""}
+${effectiveShipping.country || ""}
 Pickup: ${promoPickup ? "YES" : "NO"}
+
+Promo:
+${promoCodeDb || "-"} (discount: ${promoDiscountDb})
 
 Verify:
 ${verifyUrl}
@@ -211,7 +338,7 @@ ${verifyUrl}
           folderId: process.env.WRIKE_FOLDER_ID,
           title: wrikeSafe(`Flexblock Order ${orderId}`),
           description,
-          customStatusId: "IEAATM5VJMGPIOUI", 
+          customStatusId: "IEAATM5VJMGPIOUI",
         });
 
         console.log("✔ Wrike Task created:", wrikeTaskId);
@@ -220,63 +347,67 @@ ${verifyUrl}
       }
     }
 
-// --------------------------------------------------
-// 5) ORDER UPDATE (PAID)
-// --------------------------------------------------
-await prisma.order.update({
-  where: { orderId: String(orderId) },
-  data: {
-    status: "paid",
-    txHash,
-    ethAmount: amountEth?.toString() || null,
-    ethPrice: ethPrice?.toString() || null,
-    wallet: mintTo || wallet, // optional, falls du's persistieren willst
-    backplate,
-    backplateCode,
-    promo: promo || false,
-    promoCode: promoCode || null,
-    promoDiscount: promoDiscount ?? 0,
-    finalPriceEUR: finalEurSafe,
-    promoPickup: promoPickup || false,
-    shipName: shipping?.name || "",
-    shipStreet: shipping?.street || null,
-    shipZip: shipping?.zip || null,
-    shipCity: shipping?.city || null,
-    shipCountry: shipping?.country || null,
-    localImagePath,
-    convertedCloudPath: cloudImagePath || null,
-    verifyUrl,
-    wrikeTaskId,
-  },
-});
-
     // --------------------------------------------------
-// 6) FLEXPASS MINT
-// --------------------------------------------------
-if (!mintTo) {
-  console.warn("⚠ Mint skipped: no wallet in request or order");
-} else {
-  try {
-    console.log("🪙 Minting Flexblock Production Pass…");
+    // 5) ORDER UPDATE (PAID) – Preis/Promo NICHT überschreiben!
+    // --------------------------------------------------
+    await prisma.order.update({
+      where: { orderId: String(orderId) },
+      data: {
+        status: "paid",
+        txHash: txHash || null,
+        ethAmount: amountEth?.toString?.() || String(amountEth || "") || null,
+        ethPrice: ethPrice?.toString?.() || String(ethPrice || "") || null,
 
-    const mintResult = await mintFlexPass({
-      to: mintTo,
-      orderId,
+        // Wallet/Backplate/Shipping nur als “Fallback” speichern, wenn DB leer ist
+        wallet: order.wallet || mintTo || null,
+        backplate: order.backplate || effectiveBackplate,
+        backplateCode: order.backplateCode || effectiveBackplateCode,
+
+        shipName: order.shipName || effectiveShipping.name || "",
+        shipStreet: order.shipStreet ?? effectiveShipping.street ?? null,
+        shipZip: order.shipZip ?? effectiveShipping.zip ?? null,
+        shipCity: order.shipCity ?? effectiveShipping.city ?? null,
+        shipCountry: order.shipCountry ?? effectiveShipping.country ?? null,
+
+        // Image/Verify/Wrike
+        localImagePath,
+        convertedCloudPath: cloudImagePath || null,
+        verifyUrl,
+        wrikeTaskId,
+
+        // ✅ finalPriceEUR/promo* bleiben DB-Wahrheit (kein Update!)
+        // finalPriceEUR: finalPriceDb,
+        // promo: order.promo,
+        // promoCode: promoCodeDb,
+        // promoDiscount: promoDiscountDb,
+        // promoPickup: promoPickup,
+      },
     });
 
-    if (mintResult.ok) {
-      await prisma.order.update({
-        where: { orderId: String(orderId) },
-        data: { flexPassTokenId: mintResult.tokenId },
-      });
-      console.log("✔ FlexPass minted:", mintResult.tokenId);
+    // --------------------------------------------------
+    // 6) FLEXPASS MINT
+    // --------------------------------------------------
+    if (!mintTo) {
+      console.warn("⚠ Mint skipped: no wallet in order or request");
     } else {
-      console.warn("⚠ FlexPass mint failed:", mintResult.error);
+      try {
+        console.log("🪙 Minting Flexblock Production Pass…");
+
+        const mintResult = await mintFlexPass({ to: mintTo, orderId });
+
+        if (mintResult.ok) {
+          await prisma.order.update({
+            where: { orderId: String(orderId) },
+            data: { flexPassTokenId: mintResult.tokenId },
+          });
+          console.log("✔ FlexPass minted:", mintResult.tokenId);
+        } else {
+          console.warn("⚠ FlexPass mint failed:", mintResult.error);
+        }
+      } catch (err) {
+        console.error("❌ FLEXPASS MINT ERROR:", err);
+      }
     }
-  } catch (err) {
-    console.error("❌ FLEXPASS MINT ERROR:", err);
-  }
-}
 
     console.log("✔ PRODUCTION COMPLETE:", orderId);
 
@@ -284,8 +415,11 @@ if (!mintTo) {
       ok: true,
       orderId,
       verifyUrl,
+      finalPriceEUR: finalPriceDb,
+      promoCode: promoCodeDb,
+      promoDiscount: promoDiscountDb,
+      promoPickup,
     });
-
   } catch (err) {
     console.error("❌ PRODUCTION ERROR:", err);
     return res.status(500).json({ error: "Production failed", details: err.message });

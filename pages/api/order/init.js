@@ -1,145 +1,123 @@
 // pages/api/order/init.js
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
+import { applyPromo } from "../../../lib/promo";
 
 const prisma = new PrismaClient();
 
 function makePublicId() {
-  // kurze, URL-sichere ID (ASCII only)
-  // Beispiel: "fb_8f3a1c9e2d4b5a6c7d"
-  const hex = crypto.randomBytes(9).toString("hex"); // 18 chars
+  const hex = crypto.randomBytes(9).toString("hex");
   return `fb_${hex}`;
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   try {
     const {
       orderId,
       wallet,
-
       nft,
       backplate,
       backplateCode,
-
-      promo,
-      promoCode,
-      promoDiscount,
-      finalPriceEUR,
-      promoPickup,
-
+      promoCode, // ✅ nur den Code nehmen
       shipping,
-    } = req.body;
+    } = req.body || {};
 
-    if (!orderId) {
-      return res.status(400).json({ error: "Missing orderId" });
-    }
+    if (!orderId) return res.status(400).json({ error: "Missing orderId" });
 
-    // SITE URL (Fallback optional, aber besser env sauber setzen)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nftflexblock.xyz";
 
-    // -------------------------------
-    // ⭐ Preis sauber & sicher parsen
-    // -------------------------------
-    let normalizedFinalPrice = null;
-
-    if (finalPriceEUR !== undefined && finalPriceEUR !== null) {
-      const cleaned =
-        typeof finalPriceEUR === "string" ? finalPriceEUR.trim() : finalPriceEUR;
-
-      const num = Number(cleaned);
-      if (!Number.isNaN(num)) normalizedFinalPrice = num > 0 ? Math.round(num) : 0;
+    const basePrice = Number(process.env.BASE_PRICE_EUR || 0);
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      return res.status(500).json({ error: "BASE_PRICE_EUR missing/invalid" });
     }
 
-    // --------------------------------
-    // Falls Order schon existiert
-    // --------------------------------
-    const existing = await prisma.order.findUnique({
-      where: { orderId: String(orderId) },
-    });
+    // ✅ Preis-Wahrheit kommt vom Server
+    const pricing = applyPromo(promoCode, basePrice);
 
-    if (existing) {
-      // wenn alt/kaputt: publicId nachziehen
-      let publicId = existing.publicId;
-      if (!publicId) {
-        publicId = makePublicId();
-        const updated = await prisma.order.update({
-          where: { orderId: String(orderId) },
-          data: {
-            publicId,
-            verifyUrl: `${siteUrl}/verify/${publicId}`,
-          },
-        });
-        publicId = updated.publicId;
-      }
+    const oid = String(orderId);
 
-      return res.status(200).json({
-        ok: true,
-        orderId,
-        publicId,
-        verifyUrl: `${siteUrl}/verify/${publicId}`,
-        message: "Order already initialized",
-      });
-    }
+    // Falls Order existiert, publicId behalten; sonst neu
+    const existing = await prisma.order.findUnique({ where: { orderId: oid } });
+    const publicId = existing?.publicId || makePublicId();
+    const verifyUrl = `${siteUrl}/verify/${publicId}`;
 
-    // --------------------------------
-    // 🟢 Order NEU anlegen (mit publicId)
-    // --------------------------------
-    const publicId = makePublicId();
-
-    const created = await prisma.order.create({
-      data: {
-        orderId: String(orderId),
-
+    const saved = await prisma.order.upsert({
+      where: { orderId: oid },
+      update: {
         // NFC
         publicId,
-        verifyUrl: `${siteUrl}/verify/${publicId}`,
+        verifyUrl,
 
-        // WALLET
+        // WALLET/NFT/BACKPLATE/SHIPPING dürfen aktualisiert werden
         wallet: wallet || null,
 
-        // NFT
         nftContract: nft?.contract || "",
         nftTokenId: Number(nft?.tokenId || 0),
         nftImage: nft?.image || null,
 
-        // BACKPLATE
         backplate: backplate || null,
         backplateCode: backplateCode || null,
 
-        // PROMO & PREIS
-        promo: promo || false,
-        promoCode: promoCode || null,
-        promoDiscount: promoDiscount ?? 0,
-        finalPriceEUR: normalizedFinalPrice,
-        promoPickup: promoPickup || false,
-
-        // SHIPPING
         shipName: shipping?.name || "",
         shipStreet: shipping?.street || null,
         shipZip: shipping?.zip || null,
         shipCity: shipping?.city || null,
         shipCountry: shipping?.country || null,
 
-        // Status pending until paid
+        // ✅ PROMO & PREIS nur serverseitig
+        promo: pricing.promo,
+        promoCode: pricing.promoCode,
+        promoDiscount: pricing.promoDiscount,
+        promoPickup: pricing.promoPickup,
+        finalPriceEUR: pricing.finalPriceEUR,
+      },
+      create: {
+        orderId: oid,
         status: "pending",
+
+        publicId,
+        verifyUrl,
+
+        wallet: wallet || null,
+
+        nftContract: nft?.contract || "",
+        nftTokenId: Number(nft?.tokenId || 0),
+        nftImage: nft?.image || null,
+
+        backplate: backplate || null,
+        backplateCode: backplateCode || null,
+
+        promo: pricing.promo,
+        promoCode: pricing.promoCode,
+        promoDiscount: pricing.promoDiscount,
+        promoPickup: pricing.promoPickup,
+        finalPriceEUR: pricing.finalPriceEUR,
+
+        shipName: shipping?.name || "",
+        shipStreet: shipping?.street || null,
+        shipZip: shipping?.zip || null,
+        shipCity: shipping?.city || null,
+        shipCountry: shipping?.country || null,
       },
     });
 
     return res.status(200).json({
       ok: true,
-      orderId: created.orderId,
-      publicId: created.publicId,
-      verifyUrl: created.verifyUrl,
+      orderId: saved.orderId,
+      publicId: saved.publicId,
+      verifyUrl: saved.verifyUrl,
+      pricing: {
+        promo: saved.promo,
+        promoCode: saved.promoCode,
+        promoDiscount: saved.promoDiscount,
+        promoPickup: saved.promoPickup,
+        finalPriceEUR: saved.finalPriceEUR,
+      },
     });
   } catch (err) {
     console.error("❌ INIT ERROR:", err);
-    return res.status(500).json({
-      error: "Init failed",
-      details: err.message,
-    });
+    return res.status(500).json({ error: "Init failed", details: err.message });
   }
 }
