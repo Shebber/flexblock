@@ -722,24 +722,38 @@ return (
         }
 
         /* Socials */
-        .footer-social {
-          display: flex;
-          gap: 25px;
-          margin-bottom: 30px;
-        }
-        .footer-social a {
-          opacity: 0.7;
-          transition: opacity 0.2s, transform 0.2s;
-        }
-        .footer-social a:hover {
-          opacity: 1;
-          transform: translateY(-2px);
-        }
         .footer-social img {
-          width: 24px;
-          height: 24px;
-          filter: invert(1); /* Macht schwarze Icons weiß */
-        }
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+}
+
+
+.footer-social a {
+  color: #e6e9ee; /* Icon-Farbe */
+  opacity: 0.7;
+  transition: opacity 0.2s, transform 0.2s, color 0.2s;
+}
+
+.footer-social a:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  color: #5eead4; /* optional: Icon on hover teal */
+}
+.footer-social {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 30px;
+  align-items: center; /* ✅ vertikal sauber mittig */
+}
+
+.footer-social a {
+  display: inline-flex;         /* ✅ kein “baseline”-Absacken */
+  align-items: center;
+  justify-content: center;
+  line-height: 0;               /* ✅ killt baseline-offset */
+}
+
 
         /* Divider */
         .footer-divider {
