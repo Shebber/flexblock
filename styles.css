@@ -1346,3 +1346,75 @@ footer a:hover{ opacity:1; }
   min-width: 0;
   justify-self: stretch !important;
 }
+/* ==========================================================
+   WALLET DEVICE — MOBILE SAFE
+   (GANZ ans ENDE der styles.css)
+========================================================== */
+
+/* <= 900px: kleiner + etwas aus dem View tucken */
+@media (max-width: 900px){
+  .wallet-device-wrapper{
+    width: 420px !important;
+    height: 130px !important;
+    top: 6px !important;
+    right: -40px !important;
+    opacity: .85;
+  }
+  .wallet-device{
+    transform: scale(.75);
+    transform-origin: top right;
+  }
+}
+
+/* <= 600px: iPhone / kleine Phones — Ziel: ~70% */
+@media (max-width: 600px){
+  .wallet-device-wrapper{
+    width: 380px !important;
+    height: 125px !important;
+    top: 6px !important;
+    right: -30px !important;
+    opacity: .70;
+  }
+  .wallet-device{
+    transform: scale(.70);
+    transform-origin: top right;
+  }
+
+  /* Logo 130px tiefer, damit keine Kollision */
+  .logo-flexblock{
+    top: 120px !important; /* war 10px */
+    left: 20px !important; /* z.B. vorher 40px -> rutscht nach links */
+  }
+}
+
+/* <= 360px: immer noch sichtbar, aber kompakter */
+@media (max-width: 360px){
+  .wallet-device-wrapper{
+    width: 340px !important;
+    height: 115px !important;
+    right: -70px !important;
+  }
+  .wallet-device{
+    transform: scale(.58);
+    transform-origin: top right;
+  }
+}
+
+/* Optional: NUR ultra-tiny Devices -> Button-only
+   (nicht 420! sonst erwischt es zu viele moderne Phones) */
+@media (max-width: 320px){
+  .wallet-device-frame,
+  .wallet-display,
+  .wallet-leds{
+    display: none !important;
+  }
+
+  .wallet-button{
+    left: auto !important;
+    right: 26px !important;
+    top: 22px !important;
+    width: 60px !important;
+    height: 60px !important;
+    filter: blur(2px) !important;
+  }
+}

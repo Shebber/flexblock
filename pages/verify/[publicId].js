@@ -378,8 +378,16 @@ function GlobalStyles() {
         filter: drop-shadow(0 0 6px rgba(255,0,255,0.3));
       }
 
-      .wordmark-img { height: 48px; width: auto; margin-top: 2px; display: block; }
-      @media (max-width: 480px) { .wordmark-img { height: 36px; } }
+      .wordmark-img {
+       height: clamp(44px, 7vw, 72px);
+       width: auto;
+       display: block;
+       margin-top: 2px;
+      }
+
+        @media (max-width: 480px) {
+       .wordmark-img { height: 92px; }
+      }
 
       .tag {
         font-weight: 400;
@@ -513,7 +521,7 @@ function GlobalStyles() {
       .fixed-footer {
         position: fixed;
         right: 16px;
-        top: 16px;
+        top: 2px;
         color: var(--muted);
         font-size: 12px;
         z-index: 3;
