@@ -39,6 +39,7 @@
 ========================================================== */
 *{ margin:0; padding:0; box-sizing:border-box; }
 
+
 html,body{
   background: var(--bg);
   color: var(--text);
@@ -1356,7 +1357,7 @@ footer a:hover{ opacity:1; }
   .wallet-device-wrapper{
     width: 420px !important;
     height: 130px !important;
-    top: 6px !important;
+    top: 70px !important;
     right: -40px !important;
     opacity: .85;
   }
@@ -1371,9 +1372,9 @@ footer a:hover{ opacity:1; }
   .wallet-device-wrapper{
     width: 380px !important;
     height: 125px !important;
-    top: 6px !important;
+    top: 70px !important;
     right: -30px !important;
-    opacity: .70;
+    opacity: .80;
   }
   .wallet-device{
     transform: scale(.70);
@@ -1382,7 +1383,7 @@ footer a:hover{ opacity:1; }
 
   /* Logo 130px tiefer, damit keine Kollision */
   .logo-flexblock{
-    top: 120px !important; /* war 10px */
+    top: 5px !important; /* war 10px */
     left: 20px !important; /* z.B. vorher 40px -> rutscht nach links */
   }
 }
@@ -1417,4 +1418,286 @@ footer a:hover{ opacity:1; }
     height: 60px !important;
     filter: blur(2px) !important;
   }
+}
+/* ==========================================================
+   HERO — iPhone Showcase Tune
+   - Bild höher
+   - Top edge fades from black
+========================================================== */
+@media (max-width: 600px){
+
+  /* 1) Wichtig: das globale padding-top:100px killt dir Mobile */
+  .hero{
+    padding-top: 20px; /* statt 100px */
+  }
+
+  /* 2) Bild etwas höher “ziehen” */
+  .hero-img-fixed{
+    height: 55vh;      /* optional: bisschen mehr Hero */
+    margin-top: -8px; /* schiebt das Bild hoch */
+    position: relative;
+  }
+
+  /* 3) Mehr “oben” vom Motiv zeigen */
+  .hero-img-fixed img{
+    object-position: 60% 10%;
+  }
+
+  /* 4) Der gewünschte Schwarz-Fade oben INS Bild */
+  .hero-img-fixed::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(
+      to bottom,
+      var(--bg) 15%,
+      rgba(10,10,10,0) 44%
+    );
+    z-index: 2;
+    pointer-events:none;
+  }
+}
+
+/* MOBILE ONLY: schwarzer Glow um das Logo */
+@media (max-width: 600px){
+  .logo-flexblock{
+    /* schwarzer Halo + optional ganz leichter Cyan-Glow */
+    filter:
+      drop-shadow(0 0 25px rgba(0,0,0,.90))
+      drop-shadow(0 0 12px rgba(0,0,0,.65))
+      drop-shadow(0 0 16px rgba(0,0,0,.35))
+      drop-shadow(0 0 14px rgba(0,234,255,.20)) !important;
+  }
+
+  /* optional: falls du auf mobile hover-simulationen hast */
+  .logo-flexblock:hover{
+    filter:
+      drop-shadow(0 0 12px rgba(0,0,0,.92))
+      drop-shadow(0 0 26px rgba(0,0,0,.68))
+      drop-shadow(0 0 42px rgba(0,0,0,.38))
+      drop-shadow(0 0 14px rgba(0,234,255,.25)) !important;
+  }
+}
+/* ==========================================================
+   MOBILE HERO — Headline höher setzen
+========================================================== */
+@media (max-width: 900px){
+  .hero-inner{
+    padding-top: 0px !important;   /* war 40px */
+  }
+
+  .hero-img-fixed{
+    margin-bottom: 14px !important; /* war 24px */
+  }
+}
+/* ==========================================================
+   MOBILE: Hero Button oben rechts (neben/unter Logo)
+========================================================== */
+
+@media (max-width: 900px){
+  .hero-btn--mobileTop{
+    position: fixed !important;
+    top: calc(env(safe-area-inset-top, 0px) + 14px) !important;
+    right: 16px !important;
+    z-index: 1200 !important;
+
+    /* kompakter für Header */
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* iPhone Feintuning */
+@media (max-width: 600px){
+  .hero-btn--mobileTop{
+    top: calc(env(safe-area-inset-top, 0px) + 14px) !important;
+    right: 14px !important;
+    padding: 9px 12px !important;
+    font-size: 12.5px !important;
+  }
+}
+/* ==========================================================
+   MOBILE: Hero Button über dem Header sichtbar machen
+   (hero-inner z-index "entkoppeln", Button fixed in Root-Layer)
+========================================================== */
+
+@media (max-width: 900px) {
+  .hero-inner{
+    z-index: auto !important; /* wichtig: nimmt die Stacking-Context-Fessel weg */
+  }
+
+  .hero-btn{
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    right: 16px;
+    z-index: 1000; /* über topbar (20) */
+  }
+}
+/* ==========================================================
+   MOBILE: Filmstrip etwas nach unten
+========================================================== */
+@media (max-width: 900px){
+  .filmstrip{
+    top: 82px !important;  /* vorher 70px – Regler nach Geschmack */
+  }
+}
+
+@media (max-width: 600px){
+  .filmstrip{
+    top: 66px !important;  /* iPhone Feintuning */
+  }
+}
+@media (max-width: 900px){
+  .cinematic-verify .cinematic-sub{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    max-width: 32ch;      /* optional: schöner auf Phone */
+    padding: 0 12px;      /* optional: bisschen Luft an den Seiten */
+  }
+}
+/* Step 3 (Backplate/Colorboard) — tighter on mobile */
+@media (max-width: 600px){
+  .color-grid{
+    margin-top: -54px; /* vorher 32px */
+  }
+
+  /* optional: wenn der Textblock selbst noch “zu luftig” ist */
+  .backplate-section h2{
+    margin-bottom: 8px;
+  }
+  .backplate-section p{
+    margin-bottom: 10px;
+  }
+}
+/* MOBILE: Step 4 subtitle wirklich mittig erzwingen */
+@media (max-width: 600px){
+  #shipping-section .cinematic-sub{
+    width: 100%;
+    max-width: 340px;         /* nach Geschmack */
+    margin: 22px auto 24px;   /* sauber zentrieren */
+    padding: 0 !important;    /* falls irgendwo padding reinfunkt */
+    text-align: center !important;
+
+    /* falls Parent ein flex-container ist */
+    align-self: center;
+
+    /* falls irgendwo ein Translate/Transform aktiv ist */
+    transform: none !important;
+  }
+}
+@media (max-width: 600px){
+  /* Step 4: Card-Innenraum symmetrisch machen */
+  #shipping-section .card.cinematic-card{
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+    /* falls da irgendwas offsettet */
+    margin-left: auto !important;
+    margin-right: auto !important;
+    transform: none !important;
+  }
+
+  /* Subtitle wirklich mittig */
+  #shipping-section .cinematic-sub{
+    width: 100%;
+    margin: 12px auto 22px;
+    text-align: center !important;
+    padding: 0 !important;
+  }
+}
+@media (max-width: 600px){
+  #shipping-section .cinematic-sub{
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(340px, 100%);
+    text-align: center !important;
+  }
+}
+
+/* ==========================================================
+   MOBILE FIX: Step 4 Subline wirklich zentrieren
+   (GANZ ans Ende der styles.css)
+========================================================== */
+@media (max-width: 900px){
+  #shipping-section .cinematic-card .cinematic-sub{
+    /* kill any weird positioning coming from elsewhere */
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+
+    /* make it a centered text block */
+    display: block !important;
+    width: 100% !important;
+    max-width: 34ch;                 /* fühlt sich auf iPhone sehr “centered” an */
+    margin: 0 auto 2px !important;  /* zentriert */
+    padding: 0 10px !important;
+
+    text-align: center !important;
+
+    /* safety against overflow/odd wraps */
+    box-sizing: border-box !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+
+    /* optional: nicer line breaks on modern Safari */
+    text-wrap: balance;
+  }
+}
+/* =========================
+   CHECKOUT — MOBILE TUNING
+========================= */
+@media (max-width: 900px) {
+  /* statt 2 Spalten: sauber untereinander */
+  .checkout-wrapper{
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 22px 16px;
+  }
+
+  .checkout-left,
+  .checkout-right{
+    width: 100%;
+    margin-top: 110px; /* falls du oben Platz brauchst */
+  }
+
+  /* 3D Flexblock: etwas nach links + tiefer */
+  .cube-wrapper{
+    transform: translate(-18px, 26px);
+    transform-origin: top left;
+  }
+
+  /* Order Summary Card: zentrieren + leicht nach links */
+  .checkout-right{
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+  }
+  .payment-card{
+    width: min(420px, 92vw);
+    margin-left: -12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .checkout-left{ margin-top: 95px; }
+
+  .cube-wrapper{
+    transform: translate(0px, 120px);
+  }
+
+  .payment-card{
+    width: min(400px, 94vw);
+    margin-left: 14px;
+  }
+}
+@media (max-width: 600px) {
+  .nft-info { margin-top: 140px; }
+}
+@media (max-width: 600px) {
+  .checkout-footer { display: none; }
 }
