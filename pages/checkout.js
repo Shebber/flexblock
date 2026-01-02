@@ -258,29 +258,46 @@ if (json?.pricing) {
             <FlexblockBuyButton
               amountEth={ethToPay}
               orderId={orderId}
-              onSuccess={async ({ txHash, orderId }) => {
-                await fetch("/api/production", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    orderId,
-                    txHash,
-                    amountEth: ethToPay,
-                    ethPrice,
-                    wallet: data.wallet,
-                    backplate: data.backplate,
-                    backplateCode: data.backplateCode,
-                    promo: data.promo || null,
-                    promoCode: data.promoCode || null,
-                    promoDiscount: data.promoDiscount || null,
-                    finalPriceEUR: data.finalPriceEUR,
-                    promoPickup: data.promoPickup,
-                    shipping: data.shipping,
-                    nft: { contract, tokenId, image: nftImage },
-                  }),
-                });
-                localStorage.removeItem("flex_checkout");
-              }}
+onSuccess={async ({ txHash, orderId }) => {
+  const prodRes = await fetch("/api/production", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orderId,
+      txHash,
+      amountEth: ethToPay,
+      ethPrice,
+      wallet: data.wallet,
+      backplate: data.backplate,
+      backplateCode: data.backplateCode,
+
+      // ✅ SIGNATURE MUSS MIT
+      productionSig: data.productionSig,
+      productionSigTs: data.productionSigTs,
+
+      promo: data.promo || null,
+      promoCode: data.promoCode || null,
+      promoDiscount: data.promoDiscount || null,
+      finalPriceEUR: data.finalPriceEUR,
+      promoPickup: data.promoPickup,
+      shipping: data.shipping,
+      nft: { contract, tokenId, image: nftImage },
+    }),
+  });
+
+  const prodJson = await prodRes.json().catch(() => null);
+
+  // ✅ wenn Production scheitert: NICHT löschen, damit Retry möglich bleibt
+  if (!prodRes.ok || !prodJson?.ok) {
+    console.error("❌ /api/production failed:", prodRes.status, prodJson);
+    return;
+  }
+
+  // ✅ GENAU HIER löschen (nach Erfolg!)
+  localStorage.removeItem("flex_checkout");
+}}
+
+
             />
           </div>
         </div>

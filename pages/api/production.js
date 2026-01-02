@@ -435,6 +435,7 @@ ${verifyUrl}
       },
     });
 
+
     // --------------------------------------------------
     // 6) FLEXPASS MINT (nur wenn noch nicht vorhanden)
     // --------------------------------------------------
@@ -443,7 +444,17 @@ ${verifyUrl}
       where: { orderId: String(orderId) },
       select: { flexPassTokenId: true, wallet: true },
     });
+console.log("🧪 mint precheck", {
+  mintTo,
+  chainRpc: process.env.APECHAIN_RPC_URL ? "APECHAIN_RPC_URL" : (process.env.RPC_URL ? "RPC_URL" : "NONE"),
+  hasPriv: !!process.env.OWNER_PRIVATE_KEY,
+  hasContract: !!process.env.FLEXPASS_CONTRACT,
+});
 
+console.log("🧪 order mint state", {
+  flexPassTokenId: orderAfterUpdate?.flexPassTokenId ?? null,
+  walletInDb: order.wallet ?? null,
+});
     if (!mintTo) {
       console.warn("⚠ Mint skipped: no wallet in order or request");
     } else if (orderAfterUpdate?.flexPassTokenId != null) {
