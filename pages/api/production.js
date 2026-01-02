@@ -1,3 +1,4 @@
+import { verifyProduction } from "../../lib/productionSig";
 import { ethers } from "ethers";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
@@ -19,65 +20,6 @@ function wrikeSafe(input = "") {
     .trim();
 }
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-
-  try {
-    console.log("📥 HIT /api/production");
-
-    const {
-      orderId,
-      txHash,
-      amountEth,
-      ethPrice,
-      wallet,          // optional fallback
-      backplate,       // optional fallback
-      backplateCode,   // optional fallback
-      nft,             // optional fallback
-      shipping,        // optional fallback
-    } = req.body || {};
-
-    if (!orderId) return res.status(400).json({ error: "Missing orderId" });
-
-    // --------------------------------------------------
-    // 1) ORDER LADEN (DB = Wahrheit)
-    // --------------------------------------------------
-    const order = await prisma.order.findUnique({
-      where: { orderId: String(orderId) },
-    });
-
-    if (!order) {
-      console.error("❌ ORDER NOT FOUND:", orderId);
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-
-if (order.status === "paid" && order.txHash === txHash) {
-  return res.status(200).json({ ok: true, orderId, verifyUrl: order.verifyUrl, message: "Already processed" });
-}
-
-    // ✅ Wallet für Mint: bevorzugt DB, fallback Request
-    const mintTo = order.wallet || wallet;
-    if (!mintTo) {
-      console.warn("⚠ Mint wallet missing (order.wallet + req.wallet empty). Mint will be skipped.");
-    }
-// --------------------------------------------------
-// ✅ 1b) TX CHECK (Base payment validation)
-// --------------------------------------------------
-const BASE_RPC = process.env.BASE_RPC_URL || process.env.PAYMENT_RPC_URL || process.env.RPC_URL;
-const RECIPIENT_RAW =
-  process.env.NEXT_PUBLIC_RECIPIENT_ADDRESS || process.env.RECIPIENT_ADDRESS;
-
-if (!txHash) {
-  return res.status(400).json({ error: "Missing txHash" });
-}
-if (!BASE_RPC) {
-  return res.status(500).json({ error: "Missing BASE_RPC_URL (or PAYMENT_RPC_URL)" });
-}
-if (!RECIPIENT_RAW) {
-  return res.status(500).json({ error: "Missing NEXT_PUBLIC_RECIPIENT_ADDRESS (or RECIPIENT_ADDRESS)" });
-}
-
 // helper: normalize addresses
 const norm = (a) => {
   try {
@@ -87,102 +29,209 @@ const norm = (a) => {
   }
 };
 
-const recipient = norm(RECIPIENT_RAW);
-if (!recipient) {
-  return res.status(500).json({ error: "Recipient address invalid" });
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+
+  try {
+    console.log("📥 HIT /api/production");
+
+    const {
+      orderId,
+      txHash,
+      amountEth,
+      ethPrice,
+      wallet,        // optional fallback
+      backplate,     // optional fallback
+      backplateCode, // optional fallback
+      nft,           // optional fallback
+      shipping,      // optional fallback
+      productionSig,
+      productionSigTs,
+    } = req.body || {};
+
+    if (!orderId) return res.status(400).json({ error: "Missing orderId" });
+    if (!txHash) return res.status(400).json({ error: "Missing txHash" });
+
+    // --------------------------------------------------
+    // 1) ORDER LADEN (DB = Wahrheit)
+    // --------------------------------------------------
+    const order = await prisma.order.findUnique({
+      where: { orderId: String(orderId) },
+    });
+    
+    if (!order) {
+      console.error("❌ ORDER NOT FOUND:", orderId);
+      return res.status(404).json({ error: "Order not found" });
+    }
+// --------------------------------------------------
+// ✅ SIGNATURE GUARD (HMAC aus /api/order/init)
+// --------------------------------------------------
+
+
+if (!productionSig || !productionSigTs) {
+  return res.status(401).json({ error: "Missing production signature" });
 }
 
-// Buyer = DB-Wallet (Truth), fallback request wallet
-const buyer = norm(order.wallet || wallet);
-if (!buyer) {
-  return res.status(400).json({ error: "Missing buyer wallet (order.wallet empty)" });
+const ts = Number(productionSigTs);
+const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 Tage
+
+if (!Number.isFinite(ts)) {
+  return res.status(401).json({ error: "Invalid productionSigTs" });
+}
+if (Date.now() - ts > MAX_AGE_MS) {
+  return res.status(401).json({ error: "Production signature expired" });
 }
 
-// amountEth muss vom Checkout kommen
-let expectedWei = null;
-try {
-  expectedWei = ethers.parseEther(String(amountEth));
-} catch {
-  return res.status(400).json({ error: "Invalid amountEth" });
-}
+// publicId muss bei init gesetzt sein (sonst fallback: orderId)
+const publicId = order.publicId || order.orderId;
 
-const provider = new ethers.JsonRpcProvider(BASE_RPC);
-
-// Chain check
-const net = await provider.getNetwork();
-if (Number(net.chainId) !== 8453) {
-  return res.status(400).json({
-    error: "Wrong chain for payment",
-    expectedChainId: 8453,
-    gotChainId: Number(net.chainId),
-  });
-}
-
-// Load tx + receipt
-const tx = await provider.getTransaction(String(txHash));
-if (!tx) {
-  return res.status(400).json({ error: "Transaction not found on Base", txHash });
-}
-
-const receipt = await provider.getTransactionReceipt(String(txHash));
-if (!receipt) {
-  return res.status(400).json({ error: "Transaction receipt not found yet", txHash });
-}
-if (receipt.status !== 1) {
-  return res.status(400).json({ error: "Transaction failed", txHash });
-}
-
-// Validate to/from/value
-const txTo = norm(tx.to);
-const txFrom = norm(tx.from);
-
-if (!txTo || txTo !== recipient) {
-  return res.status(400).json({
-    error: "Payment recipient mismatch",
-    expectedTo: recipient,
-    gotTo: tx.to || null,
-  });
-}
-
-if (!txFrom || txFrom !== buyer) {
-  return res.status(400).json({
-    error: "Payment sender mismatch",
-    expectedFrom: buyer,
-    gotFrom: tx.from || null,
-  });
-}
-
-const paidWei = tx.value; // bigint (ethers v6)
-if (paidWei < expectedWei) {
-  return res.status(400).json({
-    error: "Underpaid",
-    expectedWei: expectedWei.toString(),
-    paidWei: paidWei.toString(),
-  });
-}
-
-// Prevent tx reuse across orders
-const alreadyUsed = await prisma.order.findFirst({
-  where: {
-    txHash: String(txHash),
-    NOT: { orderId: String(orderId) },
-  },
+// verify signature
+const okSig = verifyProduction({
+  orderId: String(order.orderId),
+  publicId: String(publicId),
+  sigTs: String(ts),
+  sig: String(productionSig),
 });
 
-if (alreadyUsed) {
-  return res.status(400).json({
-    error: "txHash already used by another order",
-    txHash,
-  });
+if (!okSig) {
+  return res.status(401).json({ error: "Invalid production signature" });
 }
 
-console.log("✅ TX CHECK OK:", {
-  orderId,
-  txHash,
-  buyer,
-  recipient,
-  paidWei: paidWei.toString(),
-});
+
+
+    // ✅ idempotent, aber: nicht abbrechen, wenn FlexPass noch fehlt!
+    const alreadyProcessed = Boolean(order.txHash) && order.txHash === String(txHash);
+    const alreadyMinted = order.flexPassTokenId != null;
+
+    if (alreadyProcessed && alreadyMinted) {
+      return res.status(200).json({
+        ok: true,
+        orderId,
+        verifyUrl: order.verifyUrl,
+        flexPassTokenId: order.flexPassTokenId,
+        message: "Already processed",
+      });
+    }
+
+    // ✅ Wallet für Mint & Buyer: bevorzugt DB, fallback Request
+    const mintTo = order.wallet || wallet;
+    if (!mintTo) {
+      console.warn("⚠ Mint wallet missing (order.wallet + req.wallet empty). Mint will be skipped.");
+    }
+
+    // --------------------------------------------------
+    // 1b) TX CHECK (Base payment validation)
+    // --------------------------------------------------
+    // Falls Order schon processed ist, könnte man den Tx-Check skippen.
+    // Ich lasse ihn bewusst drin (Safety first), weil du gerade in einer heißen Phase bist.
+    const BASE_RPC = process.env.BASE_RPC_URL || process.env.PAYMENT_RPC_URL || process.env.RPC_URL;
+    const RECIPIENT_RAW =
+      process.env.NEXT_PUBLIC_RECIPIENT_ADDRESS || process.env.RECIPIENT_ADDRESS;
+
+    if (!BASE_RPC) {
+      return res.status(500).json({ error: "Missing BASE_RPC_URL (or PAYMENT_RPC_URL)" });
+    }
+    if (!RECIPIENT_RAW) {
+      return res.status(500).json({ error: "Missing NEXT_PUBLIC_RECIPIENT_ADDRESS (or RECIPIENT_ADDRESS)" });
+    }
+
+    const recipient = norm(RECIPIENT_RAW);
+    if (!recipient) {
+      return res.status(500).json({ error: "Recipient address invalid" });
+    }
+
+    // Buyer = DB-Wallet (Truth), fallback request wallet
+    const buyer = norm(order.wallet || wallet);
+    if (!buyer) {
+      return res.status(400).json({ error: "Missing buyer wallet (order.wallet empty)" });
+    }
+
+    // amountEth muss vom Checkout kommen
+    let expectedWei = null;
+    try {
+      expectedWei = ethers.parseEther(String(amountEth));
+    } catch {
+      return res.status(400).json({ error: "Invalid amountEth" });
+    }
+
+    const provider = new ethers.JsonRpcProvider(BASE_RPC);
+
+    // Chain check
+    const net = await provider.getNetwork();
+    if (Number(net.chainId) !== 8453) {
+      return res.status(400).json({
+        error: "Wrong chain for payment",
+        expectedChainId: 8453,
+        gotChainId: Number(net.chainId),
+      });
+    }
+
+    // Load tx + receipt
+    const tx = await provider.getTransaction(String(txHash));
+    if (!tx) {
+      return res.status(400).json({ error: "Transaction not found on Base", txHash });
+    }
+
+    const receipt = await provider.getTransactionReceipt(String(txHash));
+    if (!receipt) {
+      return res.status(400).json({ error: "Transaction receipt not found yet", txHash });
+    }
+    if (receipt.status !== 1) {
+      return res.status(400).json({ error: "Transaction failed", txHash });
+    }
+
+    // Validate to/from/value
+    const txTo = norm(tx.to);
+    const txFrom = norm(tx.from);
+
+    if (!txTo || txTo !== recipient) {
+      return res.status(400).json({
+        error: "Payment recipient mismatch",
+        expectedTo: recipient,
+        gotTo: tx.to || null,
+      });
+    }
+
+    if (!txFrom || txFrom !== buyer) {
+      return res.status(400).json({
+        error: "Payment sender mismatch",
+        expectedFrom: buyer,
+        gotFrom: tx.from || null,
+      });
+    }
+
+    const paidWei = tx.value; // bigint (ethers v6)
+    if (paidWei < expectedWei) {
+      return res.status(400).json({
+        error: "Underpaid",
+        expectedWei: expectedWei.toString(),
+        paidWei: paidWei.toString(),
+      });
+    }
+
+    // Prevent tx reuse across orders
+    const alreadyUsed = await prisma.order.findFirst({
+      where: {
+        txHash: String(txHash),
+        NOT: { orderId: String(orderId) },
+      },
+    });
+
+    if (alreadyUsed) {
+      return res.status(400).json({
+        error: "txHash already used by another order",
+        txHash,
+      });
+    }
+
+    console.log("✅ TX CHECK OK:", {
+      orderId,
+      txHash,
+      buyer,
+      recipient,
+      paidWei: paidWei.toString(),
+    });
 
     // ✅ Backplate/Shipping/NFT primär aus DB
     const effectiveBackplate = order.backplate || backplate || null;
@@ -206,7 +255,7 @@ console.log("✅ TX CHECK OK:", {
     const promoPickup = !!order.promoPickup;
     const promoCodeDb = order.promoCode || null;
     const promoDiscountDb = order.promoDiscount ?? 0;
-    const finalPriceDb = order.finalPriceEUR; // bleibt DB-Wahrheit
+    const finalPriceDb = order.finalPriceEUR;
 
     // --------------------------------------------------
     // 2) NFT IMAGE DOWNLOAD (nur DB/effektive URL)
@@ -295,8 +344,9 @@ console.log("✅ TX CHECK OK:", {
     // --------------------------------------------------
     // 4) VERIFY URL & WRIKE
     // --------------------------------------------------
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nftflexblock.xyz";
     const verifyId = order.publicId || orderId;
-    const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${verifyId}`;
+    const verifyUrl = `${siteUrl}/verify/${verifyId}`;
 
     let wrikeTaskId = null;
 
@@ -372,35 +422,44 @@ ${verifyUrl}
         // Image/Verify/Wrike
         localImagePath,
         convertedCloudPath: cloudImagePath || null,
-        verifyUrl,
+        verifyUrl: order.verifyUrl || verifyUrl,
+        publicId: order.publicId || verifyId,
         wrikeTaskId,
-
-        // ✅ finalPriceEUR/promo* bleiben DB-Wahrheit (kein Update!)
-        // finalPriceEUR: finalPriceDb,
-        // promo: order.promo,
-        // promoCode: promoCodeDb,
-        // promoDiscount: promoDiscountDb,
-        // promoPickup: promoPickup,
       },
     });
 
     // --------------------------------------------------
-    // 6) FLEXPASS MINT
+    // 6) FLEXPASS MINT (nur wenn noch nicht vorhanden)
     // --------------------------------------------------
+    // Reload, falls zwischenzeitlich jemand anders verarbeitet hat
+    const orderAfterUpdate = await prisma.order.findUnique({
+      where: { orderId: String(orderId) },
+      select: { flexPassTokenId: true, wallet: true },
+    });
+
     if (!mintTo) {
       console.warn("⚠ Mint skipped: no wallet in order or request");
+    } else if (orderAfterUpdate?.flexPassTokenId != null) {
+      console.log("ℹ FlexPass already minted:", orderAfterUpdate.flexPassTokenId);
     } else {
       try {
         console.log("🪙 Minting Flexblock Production Pass…");
 
-        const mintResult = await mintFlexPass({ to: mintTo, orderId });
+        const mintResult = await mintFlexPass({ to: mintTo, orderId: String(orderId) });
 
         if (mintResult.ok) {
+          const fpId = mintResult.tokenId;
+          if (fpId == null || !Number.isFinite(fpId)) {
+  throw new Error(`Mint returned invalid tokenId: ${mintResult.tokenId}`);
+}
+
+
           await prisma.order.update({
             where: { orderId: String(orderId) },
-            data: { flexPassTokenId: mintResult.tokenId },
+            data: { flexPassTokenId: fpId },
           });
-          console.log("✔ FlexPass minted:", mintResult.tokenId);
+
+          console.log("✔ FlexPass minted:", fpId);
         } else {
           console.warn("⚠ FlexPass mint failed:", mintResult.error);
         }
@@ -411,10 +470,17 @@ ${verifyUrl}
 
     console.log("✔ PRODUCTION COMPLETE:", orderId);
 
+    // final read for response
+    const finalOrder = await prisma.order.findUnique({
+      where: { orderId: String(orderId) },
+      select: { verifyUrl: true, flexPassTokenId: true },
+    });
+
     return res.status(200).json({
       ok: true,
       orderId,
-      verifyUrl,
+      verifyUrl: finalOrder?.verifyUrl || verifyUrl,
+      flexPassTokenId: finalOrder?.flexPassTokenId ?? null,
       finalPriceEUR: finalPriceDb,
       promoCode: promoCodeDb,
       promoDiscount: promoDiscountDb,

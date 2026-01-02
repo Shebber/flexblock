@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import { applyPromo } from "../../../lib/promo";
+import { signProduction } from "../../../lib/productionSig"; // ✅ NEW
 
 const prisma = new PrismaClient();
 
@@ -103,11 +104,26 @@ export default async function handler(req, res) {
       },
     });
 
+    // --------------------------------------------------
+    // ✅ NEW: Production Signature (HMAC)
+    // --------------------------------------------------
+    const sigTs = Date.now();
+    const productionSig = signProduction({
+      orderId: saved.orderId,
+      publicId: saved.publicId || publicId,
+      sigTs,
+    });
+
     return res.status(200).json({
       ok: true,
       orderId: saved.orderId,
       publicId: saved.publicId,
       verifyUrl: saved.verifyUrl,
+
+      // ✅ NEW fields (client sends them to /api/production)
+      productionSig,
+      productionSigTs: sigTs,
+
       pricing: {
         promo: saved.promo,
         promoCode: saved.promoCode,

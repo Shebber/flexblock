@@ -281,9 +281,10 @@ return (
         Premium acrylic wall art with embedded NFC and blockchain
         verification.
       </p>
-      <button className="hero-btn" onClick={handleStartBuilder}>
-        Build your Flexblock
-      </button>
+     <button className="hero-btn hero-btn--mobileTop" onClick={handleStartBuilder}>
+  Build your Flexblock
+</button>
+
     </div>
   </div>
 </section>
@@ -303,9 +304,7 @@ return (
           {/* STEP 2 · NFT VERIFY */}
           <section className="cinematic-verify" id="verify-section">
             <h2 className="cinematic-step-label">Step 2 · Verify your NFT</h2>
-            <p className="cinematic-sub">
-              Connect your wallet and prove ownership of the NFT you want to turn into a Flexblock.
-            </p>
+            <p className="cinematic-sub">Connect your wallet and prove ownership of the NFT you want to turn into a Flexblock.</p>
 
             <div className="verify-box">
               {/* Eingabefelder */}
@@ -391,7 +390,6 @@ return (
             className="cinematic-sub"
             style={{ margin: "10px 0 0", opacity: 0.65, fontSize: "14px" }}
           >
-            Flexblock dimensions: <strong>300 × 300 mm</strong>
           </p>
         </div>
       </div>
@@ -460,13 +458,8 @@ return (
           {/* STEP 3.5 · PROMO CODE + PROCEED */}
           {isConnected && isOwnerValid && nftImage && (
             <div className="container cinematic-card" id="promo-section">
-              <h3 className="cinematic-step-label small">
-                Optional: Promo Code
-              </h3>
-              <p className="cinematic-sub">
-                Redeem a discount or unlock pickup pricing.
-              </p>
-
+              <h3 className="cinematic-step-label small">Optional: Promo Code</h3>
+              <p className="cinematic-sub">Redeem a discount or unlock pickup pricing.</p>
               <div className="row" style={{ marginTop: 20 }}>
                 <input
                   className="verify-input"
@@ -475,7 +468,6 @@ return (
                   onChange={(e) => setPromoCode(e.target.value)}
                   style={{ flex: 1 }}
                 />
-
                 <button
                   className="btn-gradient"
                   onClick={applyPromo}
@@ -552,9 +544,7 @@ return (
                   <button
                     className="btn-gradient"
                     onClick={handleOpenShipping}
-                  >
-                    Proceed to checkout →
-                  </button>
+                  >Proceed to checkout →</button>
                 </div>
               )}
             </div>
@@ -570,16 +560,17 @@ return (
                 <div className="card cinematic-card">
                   {/* Titel */}
                   <h3 className="cinematic-step-label small">
-                    {promoPickup
-                      ? "Step 4 · Pickup details"
-                      : "Step 4 · Shipping details"}
-                  </h3>
+  {promoPickup
+    ? <>Step 4&nbsp;·&nbsp;Pickup details</>
+    : <>Step 4&nbsp;·&nbsp;Shipping details</>}
+</h3>
 
                   <p className="cinematic-sub">
-                    {promoPickup
-                      ? "Pickup activated — only your name is required."
-                      : "We carefully pack and ship your Flexblock worldwide."}
-                  </p>
+  {promoPickup
+    ? <>Pickup activated — only your<br />name is required.</>
+    : <>We carefully pack and ship your Flexblock worldwide.</>}
+</p>
+
 
                   {/* FORM */}
                   <div className="form-grid">

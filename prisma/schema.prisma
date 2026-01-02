@@ -94,6 +94,7 @@ model Order {
   verifyUrl     String?
 
   flexPassTokenId Int?
+  flexPassTxHash String?
 
   // Local copy of the NFT image (for production)
   localImagePath     String?
