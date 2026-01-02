@@ -21,7 +21,7 @@ export default function Home() {
   const [toast, setToast] = useState(null);
   const [builderStarted, setBuilderStarted] = useState(false);
   const [showShipping, setShowShipping] = useState(false);
-const [walletActions, setWalletActions] = useState(null);
+  const [walletActions, setWalletActions] = useState(null);
   const { address, isConnected } = useAccount();
 
   // Pricing

@@ -81,39 +81,43 @@ useEffect(() => {
         }),
       });
 
-      const json = await res.json().catch(() => null);
+const json = await res.json().catch(() => null);
 
-      // Init gilt als erledigt für diese Signatur
-      lastInitSig.current = sig;
+// Init gilt als erledigt für diese Signatur
+lastInitSig.current = sig;
 
-      // ✅ pricing aus Response übernehmen (Server-Wahrheit)
-      if (json?.pricing) {
-        const merged = {
-          ...data,
-          ...json.pricing,          // promo, promoCode, promoDiscount, promoPickup, finalPriceEUR
-          publicId: json.publicId || data.publicId,
-          verifyUrl: json.verifyUrl || data.verifyUrl,
-          productionSig: json.productionSig || data.productionSig,
-          productionSigTs: json.productionSigTs || data.productionSigTs,
+// ✅ pricing aus Response übernehmen (Server-Wahrheit)
+if (json?.pricing) {
+  const merged = {
+    ...data,
+    ...json.pricing, // promo, promoCode, promoDiscount, promoPickup, finalPriceEUR
+    publicId: json.publicId || data.publicId,
+    verifyUrl: json.verifyUrl || data.verifyUrl,
 
-        };
+    // ✅ HMAC-Signatur: wenn Server sie liefert, IMMER übernehmen
+    productionSig: json.productionSig ?? data.productionSig ?? null,
+    productionSigTs: json.productionSigTs ?? data.productionSigTs ?? null,
+  };
 
-const changed =
-  merged.finalPriceEUR !== data.finalPriceEUR ||
-  merged.promo !== data.promo ||
-  merged.promoCode !== data.promoCode ||
-  merged.promoDiscount !== data.promoDiscount ||
-  merged.promoPickup !== data.promoPickup ||
-  merged.publicId !== data.publicId ||
-  merged.verifyUrl !== data.verifyUrl ||
-  merged.productionSig !== data.productionSig ||
-  merged.productionSigTs !== data.productionSigTs;
+  // ✅ Entscheide, ob wir speichern müssen (inkl. productionSig)
+  const changed =
+    merged.finalPriceEUR !== data.finalPriceEUR ||
+    merged.promo !== data.promo ||
+    merged.promoCode !== data.promoCode ||
+    merged.promoDiscount !== data.promoDiscount ||
+    merged.promoPickup !== data.promoPickup ||
+    merged.publicId !== data.publicId ||
+    merged.verifyUrl !== data.verifyUrl ||
+    merged.productionSig !== data.productionSig ||
+    merged.productionSigTs !== data.productionSigTs;
 
-        if (changed) {
-          localStorage.setItem("flex_checkout", JSON.stringify(merged));
-          setData(merged);
-        }
-      }
+  // ✅ Speichern + State updaten (nur wenn etwas wirklich anders ist)
+  if (changed) {
+    localStorage.setItem("flex_checkout", JSON.stringify(merged));
+    setData(merged);
+  }
+}
+
     } catch (e) {
       // wenn init fehlschlägt, erlauben wir einen Retry
       lastInitSig.current = "";

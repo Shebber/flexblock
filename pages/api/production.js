@@ -53,6 +53,13 @@ export default async function handler(req, res) {
     if (!orderId) return res.status(400).json({ error: "Missing orderId" });
     if (!txHash) return res.status(400).json({ error: "Missing txHash" });
 
+// ✅ Validate txHash format before calling RPC
+if (!ethers.isHexString(String(txHash), 32)) {
+  return res.status(400).json({ error: "Invalid txHash format" });
+}
+
+
+
     // --------------------------------------------------
     // 1) ORDER LADEN (DB = Wahrheit)
     // --------------------------------------------------
