@@ -181,20 +181,66 @@ export default async function handler(req, res) {
         { orderId }
       );
     }
+// Load tx + receipt (robust against RPC propagation issues)
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // Load tx + receipt
-    const tx = await provider.getTransaction(String(txHash));
-    if (!tx) {
-      return fail(res, 400, { error: "Transaction not found on Base", txHash }, { orderId });
-    }
+async function fetchTxAndReceipt(provider, hash) {
+  const [tx, receipt] = await Promise.all([
+    provider.getTransaction(hash),
+    provider.getTransactionReceipt(hash),
+  ]);
+  return { tx, receipt };
+}
 
-    const receipt = await provider.getTransactionReceipt(String(txHash));
-    if (!receipt) {
-      return fail(res, 400, { error: "Transaction receipt not found yet", txHash }, { orderId });
+const txHashStr = String(txHash);
+
+// Optional: mehrere Base RPCs probieren (dein BASE_RPC zuerst)
+const baseRpcCandidates = [
+  BASE_RPC,
+  "https://mainnet.base.org",
+  "https://base.llamarpc.com",
+].filter(Boolean);
+
+let tx = null;
+let receipt = null;
+let usedRpc = null;
+
+for (const rpcUrl of baseRpcCandidates) {
+  const p = new ethers.JsonRpcProvider(rpcUrl);
+  usedRpc = rpcUrl;
+
+  // kurzer Retry-Loop pro RPC (insg. ~60s)
+  for (let i = 0; i < 12; i++) {
+    try {
+      const out = await fetchTxAndReceipt(p, txHashStr);
+      tx = out.tx;
+      receipt = out.receipt;
+
+      if (tx && receipt) break;
+    } catch (e) {
+      // ignoriere und retry
     }
-    if (receipt.status !== 1) {
-      return fail(res, 400, { error: "Transaction failed", txHash }, { orderId });
-    }
+    await sleep(5000);
+  }
+
+  if (tx && receipt) break;
+}
+
+console.log("🧪 tx lookup result", {
+  txFound: !!tx,
+  receiptFound: !!receipt,
+  usedRpc,
+});
+
+if (!tx) {
+  return res.status(400).json({ error: "Transaction not found on Base", txHash: txHashStr, usedRpc });
+}
+if (!receipt) {
+  return res.status(400).json({ error: "Transaction receipt not found yet", txHash: txHashStr, usedRpc });
+}
+if (receipt.status !== 1) {
+  return res.status(400).json({ error: "Transaction failed", txHash: txHashStr });
+}
 
     // Validate to/from/value
     const txTo = norm(tx.to);

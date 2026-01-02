@@ -1,5 +1,5 @@
 "use client";
-
+import { ethers } from "ethers";
 import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
 
@@ -15,6 +15,8 @@ export default function Checkout() {
   const [data, setData] = useState(null);
   const { ethPrice } = useEthPrice();
   const lastInitSig = useRef("");
+
+  const baseProvider = new ethers.JsonRpcProvider("https://mainnet.base.org");
 
   // 1. Daten aus LocalStorage laden
   useEffect(() => {
@@ -267,7 +269,25 @@ setData((prev) => ({ ...(prev || {}), ...merged }));
             <FlexblockBuyButton
               amountEth={ethToPay}
               orderId={orderId}
+
 onSuccess={async ({ txHash, orderId }) => {
+  try {
+    // 1 Confirmation, bis zu 120s warten
+    const receipt = await baseProvider.waitForTransaction(txHash, 1, 120000);
+
+    // Wenn timeout -> receipt kann null sein
+    if (!receipt) {
+      console.warn("⚠ TX not confirmed within timeout, continuing anyway:", txHash);
+    } else if (receipt.status !== 1) {
+      console.error("❌ TX reverted:", txHash);
+      // Hier kannst du return machen, oder trotzdem production callen.
+      // Ich würde return machen:
+      return;
+    }
+  } catch (e) {
+    console.warn("⚠ waitForTransaction failed, continuing anyway:", e?.message || e);
+  }
+
   const prodRes = await fetch("/api/production", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -296,13 +316,11 @@ onSuccess={async ({ txHash, orderId }) => {
 
   const prodJson = await prodRes.json().catch(() => null);
 
-  // ✅ wenn Production scheitert: NICHT löschen, damit Retry möglich bleibt
   if (!prodRes.ok || !prodJson?.ok) {
     console.error("❌ /api/production failed:", prodRes.status, prodJson);
     return;
   }
 
-  // ✅ GENAU HIER löschen (nach Erfolg!)
   localStorage.removeItem("flex_checkout");
 }}
 
