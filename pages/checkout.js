@@ -93,16 +93,21 @@ useEffect(() => {
           ...json.pricing,          // promo, promoCode, promoDiscount, promoPickup, finalPriceEUR
           publicId: json.publicId || data.publicId,
           verifyUrl: json.verifyUrl || data.verifyUrl,
+          productionSig: json.productionSig || data.productionSig,
+          productionSigTs: json.productionSigTs || data.productionSigTs,
+
         };
 
-        const changed =
-          merged.finalPriceEUR !== data.finalPriceEUR ||
-          merged.promo !== data.promo ||
-          merged.promoCode !== data.promoCode ||
-          merged.promoDiscount !== data.promoDiscount ||
-          merged.promoPickup !== data.promoPickup ||
-          merged.publicId !== data.publicId ||
-          merged.verifyUrl !== data.verifyUrl;
+const changed =
+  merged.finalPriceEUR !== data.finalPriceEUR ||
+  merged.promo !== data.promo ||
+  merged.promoCode !== data.promoCode ||
+  merged.promoDiscount !== data.promoDiscount ||
+  merged.promoPickup !== data.promoPickup ||
+  merged.publicId !== data.publicId ||
+  merged.verifyUrl !== data.verifyUrl ||
+  merged.productionSig !== data.productionSig ||
+  merged.productionSigTs !== data.productionSigTs;
 
         if (changed) {
           localStorage.setItem("flex_checkout", JSON.stringify(merged));
