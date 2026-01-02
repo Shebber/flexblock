@@ -83,6 +83,13 @@ useEffect(() => {
 
 const json = await res.json().catch(() => null);
 
+if (!res.ok) {
+  console.error("❌ /api/order/init failed:", res.status, json);
+  lastInitSig.current = ""; // retry erlauben
+  return;
+}
+
+
 // Init gilt als erledigt für diese Signatur
 lastInitSig.current = sig;
 
@@ -114,7 +121,8 @@ if (json?.pricing) {
   // ✅ Speichern + State updaten (nur wenn etwas wirklich anders ist)
   if (changed) {
     localStorage.setItem("flex_checkout", JSON.stringify(merged));
-    setData(merged);
+setData((prev) => ({ ...(prev || {}), ...merged }));
+
   }
 }
 
@@ -133,6 +141,7 @@ if (json?.pricing) {
   useEffect(() => {
     if (!data) return;
     const lines = [
+      "PLEASE NOTE: SWITCH TO BASE NETWORK BEFORE PAYMENT",
       "YOUR FLEXBLOCK IS CRAFTED IN SMALL-BATCH PRODUCTION IN BOCHUM, GERMANY.",
       "EACH PIECE IS PRINTED WITH ULTRA-HIGH RESOLUTION ON NEXT-GEN UV SYSTEMS.",
       "COLORS ARE REPRODUCED WITH EXTREME PRECISION AND DEEP CONTRAST LAYERS.",
