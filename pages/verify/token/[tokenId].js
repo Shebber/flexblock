@@ -1,22 +1,36 @@
-import prisma from "../../../lib/prisma";
+import { PrismaClient } from "@prisma/client";
 
-export async function getServerSideProps(ctx) {
-  const tokenId = Number(ctx.params.tokenId);
-  if (!Number.isFinite(tokenId)) return { notFound: true };
+const prisma = new PrismaClient();
 
+export async function getServerSideProps({ params }) {
+  const { tokenId } = params;
+
+  // 🔎 Order finden, die diesen FlexPass minted hat
   const order = await prisma.order.findFirst({
-    where: { flexPassTokenId: tokenId },
-    select: { publicId: true, verifyUrl: true },
+    where: {
+      flexPassTokenId: Number(tokenId),
+    },
+    select: {
+      publicId: true,
+    },
   });
 
-  const dest = order?.verifyUrl || (order?.publicId ? `/verify/${order.publicId}` : null);
-  if (!dest) return { notFound: true };
+  // ❌ Kein Match → Info-Seite
+  if (!order?.publicId) {
+    return {
+      notFound: true,
+    };
+  }
 
+  // ✅ Weiterleitung auf bestehende Verify-Seite
   return {
-    redirect: { destination: dest, permanent: false },
+    redirect: {
+      destination: `/verify/${order.publicId}`,
+      permanent: false,
+    },
   };
 }
 
-export default function TokenVerifyRedirect() {
+export default function TokenRedirect() {
   return null;
 }

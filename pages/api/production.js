@@ -77,44 +77,40 @@ export default async function handler(req, res) {
     }
 
     // --------------------------------------------------
-    // ✅ SIGNATURE GUARD (HMAC aus /api/order/init)
-    // --------------------------------------------------
-    if (!productionSig || !productionSigTs) {
-      return fail(
-        res,
-        401,
-        { error: "Missing production signature" },
-        { orderId, hasSig: !!productionSig, hasTs: !!productionSigTs }
-      );
-    }
+// ✅ SIGNATURE GUARD (HMAC aus /api/order/init)
+// --------------------------------------------------
+if (!productionSig || !productionSigTs) {
+  return res.status(401).json({ error: "Missing production signature" });
+}
 
-    const ts = Number(productionSigTs);
-    const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 Tage
+const ts = Number(productionSigTs);
+const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-    if (!Number.isFinite(ts)) {
-      return fail(res, 401, { error: "Invalid productionSigTs" }, { orderId, productionSigTs });
-    }
-    if (Date.now() - ts > MAX_AGE_MS) {
-      return fail(res, 401, { error: "Production signature expired" }, { orderId, ts });
-    }
+if (!Number.isFinite(ts)) {
+  return res.status(401).json({ error: "Invalid productionSigTs" });
+}
+if (Date.now() - ts > MAX_AGE_MS) {
+  return res.status(401).json({ error: "Production signature expired" });
+}
 
-    const publicId = order.publicId || order.orderId;
+// ✅ WICHTIG: KEIN fallback auf orderId.
+// Wenn publicId fehlt, war /api/order/init nicht sauber (oder DB nicht beschrieben).
+const publicId = String(order.publicId || "");
+if (!publicId) {
+  return res.status(409).json({ error: "Order missing publicId (run /api/order/init first)" });
+}
 
-    const okSig = verifyProduction({
-      orderId: String(order.orderId),
-      publicId: String(publicId),
-      sigTs: String(ts),
-      sig: String(productionSig),
-    });
+const okSig = verifyProduction({
+  orderId: String(order.orderId),
+  publicId,
+  sigTs: String(ts),
+  sig: String(productionSig),
+});
 
-    if (!okSig) {
-      return fail(
-        res,
-        401,
-        { error: "Invalid production signature" },
-        { orderId, publicId, ts }
-      );
-    }
+if (!okSig) {
+  return res.status(401).json({ error: "Invalid production signature" });
+}
+
 
     // ✅ idempotent, aber: nicht abbrechen, wenn FlexPass noch fehlt!
     const alreadyProcessed = Boolean(order.txHash) && order.txHash === String(txHash);
@@ -531,21 +527,26 @@ ${verifyUrl}
         const mintResult = await mintFlexPass({ to: mintToNorm, orderId: String(orderId) });
 
         if (mintResult.ok) {
-          const fpId = mintResult.tokenId;
+  const fpId = mintResult.tokenId;
+  const fpTx = mintResult.txHash || null;
 
-          if (fpId == null || !Number.isFinite(fpId)) {
-            throw new Error(`Mint returned invalid tokenId: ${mintResult.tokenId}`);
-          }
+  if (fpId == null || !Number.isFinite(fpId)) {
+    throw new Error(`Mint returned invalid tokenId: ${mintResult.tokenId}`);
+  }
 
-          await prisma.order.update({
-            where: { orderId: String(orderId) },
-            data: { flexPassTokenId: fpId },
-          });
+  await prisma.order.update({
+    where: { orderId: String(orderId) },
+    data: {
+      flexPassTokenId: fpId,
+      flexPassTxHash: fpTx, // ✅ NEU
+    },
+  });
 
-          console.log("✔ FlexPass minted:", fpId);
-        } else {
-          console.warn("⚠ FlexPass mint failed:", mintResult.error);
-        }
+  console.log("✔ FlexPass minted:", fpId, "tx:", fpTx);
+} else {
+  console.warn("⚠ FlexPass mint failed:", mintResult.error);
+}
+
       } catch (err) {
         console.error("❌ FLEXPASS MINT ERROR:", err);
       }

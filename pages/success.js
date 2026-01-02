@@ -13,7 +13,8 @@ export default function SuccessPage() {
     const orderId = url.searchParams.get("order");
     if (!orderId) return;
 
-    fetch(`/api/getOrder?order=${orderId}`)
+    fetch(`/api/getOrder?orderId=${encodeURIComponent(orderId)}`)
+
       .then((r) => r.json())
       .then((data) => {
         setOrder(data.order || null);
