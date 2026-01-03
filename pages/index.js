@@ -37,6 +37,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [nftImage, setNftImage] = useState(null);
   const [isOwnerValid, setIsOwnerValid] = useState(false);
+  const [nftChainId, setNftChainId] = useState(null);
 
   // Shipping
   const [shipName, setShipName] = useState("");
@@ -96,6 +97,7 @@ export default function Home() {
     setError("");
     setIsOwnerValid(false);
     setNftImage(null);
+    setNftChainId(null);
     setBackplate(null);
     setPromoResult(null);
     setPromoPickup(false);
@@ -141,7 +143,9 @@ export default function Home() {
       
       // WICHTIG: Wir speichern die gefundene ChainID, falls wir sie später brauchen
       // (z.B. wenn du sie im State für den Checkout brauchst)
-      const detectedChainId = data.chainId; 
+      const detectedChainId = data.chainId;
+      setNftChainId(detectedChainId);
+
 
       // 2. Metadaten / Bild laden
       try {
@@ -617,6 +621,7 @@ return (
                           contract,
                           tokenId,
                           nftImage,
+                          nftChainId,
 
                           // Backplate
                           backplate,

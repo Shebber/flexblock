@@ -1,16 +1,19 @@
-
-
 import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
   try {
+    // ✅ MAGIC-LINK / NEXTAUTH GUARD
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) return res.status(401).json({ error: "Unauthorized" });
+
     // 1. Umsätze (Summe aller ETH aus Orders)
     const orders = await prisma.order.findMany();
-    // ACHTUNG: Stelle sicher, dass dein Prisma-Modell jetzt 'ethAmount' heißt!
     const totalEthCollected = orders.reduce(
-      (sum, o) => sum + Number(o.ethAmount || 0), 
+      (sum, o) => sum + Number(o.ethAmount || 0),
       0
     );
 
@@ -27,8 +30,7 @@ export default async function handler(req, res) {
     // Aktueller Bestand (Rechnerisch)
     const treasuryEth = totalEthCollected + deltaSum;
 
-    // 3. Kursdaten live von CoinGecko (Ethereum statt ApeCoin)
-    // ID: ethereum
+    // 3. Kursdaten live von CoinGecko (Ethereum)
     const priceRes = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=eur&include_24hr_change=true"
     );
@@ -48,17 +50,13 @@ export default async function handler(req, res) {
       y: price,
     }));
 
-    // 30-Tage Durchschnitt berechnen
-    const avg =
-      chartData.reduce((sum, p) => sum + p.y, 0) / chartData.length;
-
-    // Signal: Ist aktueller Preis über dem 30-Tage-Schnitt?
+    const avg = chartData.reduce((sum, p) => sum + p.y, 0) / chartData.length;
     const signal = ethPriceEur > avg ? "green" : "red";
 
     return res.status(200).json({
       totalEthCollected,
       treasuryEth,
-      ethPriceEur,      // Vorher apePriceEur
+      ethPriceEur,
       priceChange24h,
       chartData,
       average30d: avg,

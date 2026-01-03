@@ -57,6 +57,7 @@ export default async function handler(req, res) {
         nftContract: nft?.contract || "",
         nftTokenId: Number(nft?.tokenId || 0),
         nftImage: nft?.image || null,
+        nftChainId: nft?.chainId != null ? Number(nft.chainId) : undefined,
 
         backplate: backplate || null,
         backplateCode: backplateCode || null,
@@ -86,6 +87,7 @@ export default async function handler(req, res) {
         nftContract: nft?.contract || "",
         nftTokenId: Number(nft?.tokenId || 0),
         nftImage: nft?.image || null,
+        nftChainId: nft?.chainId != null ? Number(nft.chainId) : null,
 
         backplate: backplate || null,
         backplateCode: backplateCode || null,

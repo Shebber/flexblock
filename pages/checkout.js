@@ -76,6 +76,7 @@ useEffect(() => {
             contract: data.contract,
             tokenId: data.tokenId,
             image: data.nftImage,
+            chainId: data.nftChainId ?? null,
           },
           shipping: data.shipping,
           // ✅ nur noch der Code – Preis berechnet der Server
@@ -143,7 +144,7 @@ setData((prev) => ({ ...(prev || {}), ...merged }));
   useEffect(() => {
     if (!data) return;
     const lines = [
-      "PLEASE NOTE: SWITCH TO BASE NETWORK BEFORE PAYMENT",
+      "PLEASE NOTE: PAYMENT IS REQUIRED IN ETH VIA THE BASE NETWORK",
       "YOUR FLEXBLOCK IS CRAFTED IN SMALL-BATCH PRODUCTION IN BOCHUM, GERMANY.",
       "EACH PIECE IS PRINTED WITH ULTRA-HIGH RESOLUTION ON NEXT-GEN UV SYSTEMS.",
       "COLORS ARE REPRODUCED WITH EXTREME PRECISION AND DEEP CONTRAST LAYERS.",

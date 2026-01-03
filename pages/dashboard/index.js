@@ -1,19 +1,39 @@
 import { useState } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../api/auth/[...nextauth]";
+
 
 export async function getServerSideProps(context) {
-  const { req } = context;
+  const { req, res } = context;
 
-  // 1. Host dynamisch ermitteln (funktioniert lokal UND live)
-  const protocol = req.headers['x-forwarded-proto'] || 'http';
-  const host = req.headers.host; // z.B. "localhost:3000" oder "dein-shop.vercel.app"
+  // ✅ 1) Serverseitiger NextAuth-Guard
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin?callbackUrl=/dashboard",
+        permanent: false,
+      },
+    };
+  }
+
+  // ✅ 2) Host dynamisch ermitteln (lokal + Vercel)
+  const protocol = req.headers["x-forwarded-proto"] || "http";
+  const host = req.headers.host;
   const baseUrl = `${protocol}://${host}`;
 
-  // 2. Fetch mit der korrekten Base-URL
-  const res = await fetch(`${baseUrl}/api/treasury/summary`);
-  const summary = await res.json();
+  // ✅ 3) Session-Cookies an den API-Call weiterreichen
+  const summaryRes = await fetch(`${baseUrl}/api/treasury/summary`, {
+    headers: {
+      cookie: req.headers.cookie || "",
+    },
+  });
+
+  const summary = await summaryRes.json().catch(() => ({ error: "Invalid JSON" }));
 
   return { props: { summary } };
 }
+
 export default function Dashboard({ summary }) {
   const [showEditor, setShowEditor] = useState(false);
   // 🟢 NEU: State für ETH statt APE
