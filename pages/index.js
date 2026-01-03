@@ -4,7 +4,7 @@ import WalletDisplay14 from "../components/WalletDisplay14";
 
 import FaqSection from "../components/FaqSection";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 
 import { FLEXBLOCK_BASE_PRICE_EUR } from "../lib/pricing";
@@ -50,9 +50,54 @@ export default function Home() {
   const [promoResult, setPromoResult] = useState(null);
   const [promoPickup, setPromoPickup] = useState(false);
 
-  // Backplate-Daten
-  const backplateColors = getAvailableBackplateColors();
-  const backplateObj = backplateColors.find((c) => c.hex === backplate);
+// Backplate-Daten (DB first, JSON fallback) – immer safe Array
+const [backplateColors, setBackplateColors] = useState(() => {
+  try {
+    const raw = getAvailableBackplateColors();
+
+    // ✅ falls util mal {colors:[...]} liefert
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.colors)) return raw.colors;
+
+    return [];
+  } catch {
+    return [];
+  }
+});
+
+useEffect(() => {
+  let alive = true;
+
+  (async () => {
+    try {
+      const res = await fetch("/api/colors", { cache: "no-store" });
+      const json = await res.json();
+
+      // ✅ API liefert { colors: [...] }
+      const list = Array.isArray(json?.colors) ? json.colors : [];
+
+      // ✅ enabled kann true/false sein, aber wir filtern nur echte enabled Farben
+      const enabled = list.filter((c) => !!c?.enabled);
+
+      // ✅ wenn DB leer ist, lassen wir fallback drin
+      if (alive && enabled.length > 0) setBackplateColors(enabled);
+    } catch (e) {
+      console.warn("⚠ could not load /api/colors, using local fallback");
+    }
+  })();
+
+  return () => {
+    alive = false;
+  };
+}, []);
+
+const backplateObj = useMemo(() => {
+  // ✅ findet nur, wenn array - sonst null
+  return Array.isArray(backplateColors)
+    ? backplateColors.find((c) => c.hex === backplate) || null
+    : null;
+}, [backplateColors, backplate]);
+
 
   const shippingComplete =
     shipName.trim() !== "" &&
@@ -402,7 +447,7 @@ return (
     {/* Colorboard direkt unter dem Rahmen */}
     <div className="backplate-inline" id="backplate-section">
       <div className="color-grid">
-        {backplateColors.map((c) => (
+       {(Array.isArray(backplateColors) ? backplateColors : []).map((c) => (
           <div
             key={c.code}
             className={`color-swatch ${backplate === c.hex ? "selected" : ""}`}

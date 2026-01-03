@@ -32,6 +32,16 @@ export default async function handler(req, res) {
       return { del, ins, after };
     });
 
+res.setHeader("Cache-Control", "no-store");
+
+const count = await prisma.backplateColor.count();
+const sample = await prisma.backplateColor.findMany({
+  take: 5,
+  orderBy: [{ sort: "asc" }, { name: "asc" }],
+});
+
+return res.status(200).json({ ok: true, count, sample });
+
     console.log("✅ updateColors saved", {
       deleted: result.del.count,
       inserted: result.ins.count,
@@ -52,5 +62,10 @@ export default async function handler(req, res) {
       error: "Could not save colors.",
       details: err?.message || String(err),
     });
+return res.status(500).json({
+  error: "Could not save colors.",
+  details: err?.message || String(err),
+});
+
   }
 }
