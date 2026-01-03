@@ -65,6 +65,8 @@ model Order {
   nftContract String       // ← required
   nftTokenId  Int          // ← required
   nftImage    String?
+  nftChainId  Int?
+
 
   // Backplate
   backplate   String?
