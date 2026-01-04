@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { applyPromo } from "../../../lib/promo";
 import { signProduction } from "../../../lib/productionSig"; // ✅ NEW
 
+
 const prisma = new PrismaClient();
 
 function makePublicId() {
@@ -19,11 +20,26 @@ export default async function handler(req, res) {
       orderId,
       wallet,
       nft,
+      nftChainId,
       backplate,
       backplateCode,
       promoCode, // ✅ nur den Code nehmen
       shipping,
     } = req.body || {};
+
+const chainIdNum =
+  nftChainId != null
+    ? Number(nftChainId)
+    : nft?.chainId != null
+    ? Number(nft.chainId)
+    : null;
+
+console.log("🧬 INIT chainId resolved:", { nftChainId, nftChainIdFromNft: nft?.chainId, chainIdNum });
+
+
+if (chainIdNum != null && !Number.isFinite(chainIdNum)) {
+  return res.status(400).json({ ok: false, error: "Invalid nftChainId" });
+}
 
     if (!orderId) return res.status(400).json({ error: "Missing orderId" });
 
@@ -57,7 +73,9 @@ export default async function handler(req, res) {
         nftContract: nft?.contract || "",
         nftTokenId: Number(nft?.tokenId || 0),
         nftImage: nft?.image || null,
-        nftChainId: nft?.chainId != null ? Number(nft.chainId) : undefined,
+        ...(chainIdNum != null ? { nftChainId: chainIdNum } : {}),
+
+
 
         backplate: backplate || null,
         backplateCode: backplateCode || null,
@@ -87,7 +105,9 @@ export default async function handler(req, res) {
         nftContract: nft?.contract || "",
         nftTokenId: Number(nft?.tokenId || 0),
         nftImage: nft?.image || null,
-        nftChainId: nft?.chainId != null ? Number(nft.chainId) : null,
+        nftChainId: chainIdNum,
+
+
 
         backplate: backplate || null,
         backplateCode: backplateCode || null,

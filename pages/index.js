@@ -73,23 +73,19 @@ useEffect(() => {
       const res = await fetch("/api/colors", { cache: "no-store" });
       const json = await res.json();
 
-      // ✅ API liefert { colors: [...] }
       const list = Array.isArray(json?.colors) ? json.colors : [];
+      const enabled = list.filter((c) => c && c.enabled && c.hex);
 
-      // ✅ enabled kann true/false sein, aber wir filtern nur echte enabled Farben
-      const enabled = list.filter((c) => !!c?.enabled);
-
-      // ✅ wenn DB leer ist, lassen wir fallback drin
-      if (alive && enabled.length > 0) setBackplateColors(enabled);
+      if (alive) setBackplateColors(enabled.length ? enabled : getAvailableBackplateColors());
     } catch (e) {
-      console.warn("⚠ could not load /api/colors, using local fallback");
+      console.warn("⚠ could not load /api/colors, using local fallback", e);
+      if (alive) setBackplateColors(getAvailableBackplateColors());
     }
   })();
 
-  return () => {
-    alive = false;
-  };
+  return () => { alive = false; };
 }, []);
+
 
 const backplateObj = useMemo(() => {
   // ✅ findet nur, wenn array - sonst null

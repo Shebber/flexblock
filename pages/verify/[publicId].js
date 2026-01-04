@@ -7,9 +7,16 @@ const prisma = new PrismaClient();
 export async function getServerSideProps(context) {
   const { publicId } = context.params;
 
-  const order = await prisma.order.findUnique({
-    where: { publicId },
-  });
+const order = await prisma.order.findUnique({ where: { publicId } });
+
+console.log("🔎 VERIFY GSSP", {
+  publicId,
+  found: !!order,
+  orderId: order?.orderId,
+  nftChainId: order?.nftChainId,
+  nftContract: order?.nftContract,
+  nftTokenId: order?.nftTokenId,
+});
 
   if (!order) {
     return { props: { found: false, publicId } };
@@ -210,7 +217,30 @@ export default function VerifyPage({ found, order, publicId }) {
     : null;
 
   const artUrl = order.nftImage || "";
-  const chainLabel = "ApeChain"; // display only (store chain later if needed)
+  const CHAIN_LABELS = {
+  1: "Ethereum Mainnet",
+  137: "Polygon",
+  81457: "Blast",
+  7777777: "Zora",
+  80094: "Berachain",
+  8453: "Base",
+  33139: "ApeChain",
+  2741: "Abstract",
+  5031: "Somnia",
+  10: "Optimism",
+  42161: "Arbitrum One",
+  43114: "Avalanche C-Chain",
+  56: "Binance Smart Chain",
+  10143: "Monad",
+};
+
+const chainId = order?.nftChainId == null ? null : Number(order.nftChainId);
+const chainLabel =
+  chainId == null
+    ? "Unknown"
+    : (CHAIN_LABELS[chainId] || `Chain ID: ${chainId}`);
+
+
 
   const statusLabel =
     order.status === "paid"

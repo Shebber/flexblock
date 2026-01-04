@@ -8,28 +8,28 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   name          String?
-  email         String?  @unique
+  email         String?   @unique
   emailVerified DateTime?
   accounts      Account[]
   sessions      Session[]
 }
 
 model Account {
-  id                 Int     @id @default(autoincrement())
-  userId             Int
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id])
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
 }
@@ -51,59 +51,39 @@ model VerificationToken {
 }
 
 model Order {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-
-  // Checkout + Payment
-  orderId     String   @unique
-  ethAmount   Decimal?
-  ethPrice    Decimal?
-  txHash      String?
-
-  // Wallet & NFT
-  wallet      String?
-  nftContract String       // ← required
-  nftTokenId  Int          // ← required
-  nftImage    String?
-  nftChainId  Int?
-
-
-  // Backplate
-  backplate   String?
-  backplateCode  String?
-
-  // 🔥 NEW – Promo Fields
-  promo          Boolean?   @default(false)
-  promoCode      String?
-  promoDiscount  Int?       @default(0)
-  finalPriceEUR  Int?
-  promoPickup    Boolean?   @default(false)
-
-  // Shipping
-  shipName    String
-  shipStreet  String?
-  shipZip     String?
-  shipCity    String?
-  shipCountry String?
-
-  // Production Status
-  status      String   @default("paid")
-  trackingUrl String?
-
-  // NFC link
-  publicId    String?   @unique
-  flexblockId   String?
-  verifyUrl     String?
-
-  flexPassTokenId Int?
-  flexPassTxHash String?
-
-  // Local copy of the NFT image (for production)
+  id                 Int      @id @default(autoincrement())
+  createdAt          DateTime @default(now())
+  orderId            String   @unique
+  ethAmount          Decimal?
+  ethPrice           Decimal?
+  txHash             String?
+  wallet             String?
+  nftContract        String
+  nftTokenId         Int
+  nftImage           String?
+  backplate          String?
+  backplateCode      String?
+  promo              Boolean? @default(false)
+  promoCode          String?
+  promoDiscount      Int?     @default(0)
+  finalPriceEUR      Int?
+  promoPickup        Boolean? @default(false)
+  shipName           String
+  shipStreet         String?
+  shipZip            String?
+  shipCity           String?
+  shipCountry        String?
+  status             String   @default("paid")
+  trackingUrl        String?
+  publicId           String?  @unique
+  flexblockId        String?
+  verifyUrl          String?
+  flexPassTokenId    Int?
   localImagePath     String?
   convertedCloudPath String?
-
-  wrikeTaskId   String?
-
+  wrikeTaskId        String?
+  flexPassTxHash     String?
+  nftChainId         Int?
 }
 
 model TreasuryAdjustment {
@@ -113,7 +93,7 @@ model TreasuryAdjustment {
   newEth      Decimal
   deltaEth    Decimal
   reason      String
-  changedBy   String   // <- Email des eingeloggten Users
+  changedBy   String
 }
 
 model BackplateColor {
@@ -126,4 +106,3 @@ model BackplateColor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
